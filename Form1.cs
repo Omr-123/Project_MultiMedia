@@ -35,9 +35,12 @@ namespace Project_MultiMedia
         public List<Bitmap> Left = new List<Bitmap>();
         public List<Bitmap> Right = new List<Bitmap>();
         public List<Bitmap> Jump = new List<Bitmap>();
-        public List<Bitmap> Sprint = new List<Bitmap>();
         public List<Bitmap> Current;
         public int HP;
+        public List<Bitmap> []Heart = new List<Bitmap>[6];
+        public int []IF_Heart = new int[6];
+        public List<Bitmap> Sprint = new List<Bitmap>();
+        public int IF_Sprint;
         public int spd;
         public int IF,IF_MAX;
         public int Dir;
@@ -86,16 +89,19 @@ namespace Project_MultiMedia
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2&&Map1.Elevator.IF!=0)  Map1.Elevator.IF = 2;
                 else Map1.Elevator.IF = 0;
+                Hero.Elevator = false;
             }
-            else if (Map1.Elevator.Y + Map1.Elevator.imgs[Map1.Elevator.IF].Height + Map1.Elevator.spd >= 599)
+            else if (Map1.Elevator.Y + Map1.Elevator.H + Map1.Elevator.spd >= 599)
             {
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
                 else Map1.Elevator.IF = 0;
+                Hero.Elevator = false;
             }
             else if(Map1.Elevator.IF!=0)
             {
                 Map1.Elevator.Y += Map1.Elevator.spd;
+                Hero.Y += Map1.Elevator.spd;
                 Map1.Elevator.IF = 1;
             }
                 
@@ -104,23 +110,16 @@ namespace Project_MultiMedia
         {
 
             Map1.img = new Bitmap("assets/Maps/1.png");
-            for (int i = 80; i <= 89; i++)
-            {
-                Hero.Right.Add(new Bitmap("assets/Hero1/Right/" + i + ".png"));
-            }
-            for (int i = 79; i <= 88; i++)
-            {
-                Hero.Left.Add(new Bitmap("assets/Hero1/Left/" + i + ".png"));
-            }
+          
 
             //Elevator
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/1.png"));
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/2.png"));
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/0.png"));
             Map1.Elevator.X = 3453;
-            Map1.Elevator.Y = 599  - Map1.Elevator.imgs[0].Height;
+            Map1.Elevator.H = 220;
+            Map1.Elevator.Y = 599  - Map1.Elevator.H;
             Map1.Elevator.W = 157;
-            Map1.Elevator.H = Map1.Elevator.imgs[0].Height;
             Map1.Elevator.spd = -3;
 
             //Obsticals
@@ -131,12 +130,29 @@ namespace Project_MultiMedia
             Pnn.H =112;
             Map1.Obsticals.Add(Pnn);
         }
-        private void Form1_Load(object sender, EventArgs e)
+        void CreateHero()
         {
-            CreateMap();
-            ScaleX = (float)ClientSize.Width  / (float)Map1.img.Width;
-            ScaleY = (float) ClientSize.Height/ (float)Map1.img.Height;
-            off = new Bitmap(ClientSize.Width, ClientSize.Height);
+            for (int i = 80; i <= 89; i++)
+            {
+                Hero.Right.Add(new Bitmap("assets/Hero1/Right/" + i + ".png"));
+            }
+            for (int i = 79; i <= 88; i++)
+            {
+                Hero.Left.Add(new Bitmap("assets/Hero1/Left/" + i + ".png"));
+            }
+            for (int i2 = 0; i2 < 6; i2++)
+            {
+                Hero.Heart[i2] = new List<Bitmap>();
+                for (int i = 0; i <= 4; i++)
+                {
+                    Hero.Heart[i2].Add(new Bitmap("assets/assets/hearts/" + i + ".png"));
+                    Hero.IF_Heart[i2] = 0;
+                }
+            }
+            for (int i = 0; i <= 6; i++)
+            {
+                Hero.Sprint.Add(new Bitmap("assets/assets/sprint/" + i + ".png"));
+            }
             Hero.Rig = false;
             Hero.Lef = false;
             Hero.U = false;
@@ -148,10 +164,19 @@ namespace Project_MultiMedia
             Hero.W = 150;
             Hero.H = 150;
             Hero.X = 0;
-            Hero.Y= LimitY1;
+            Hero.Y = LimitY1;
             Hero.Dir = 1;
             Hero.Current = Hero.Right;
             Hero.HP = 100;
+
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            CreateMap();
+            ScaleX = (float)ClientSize.Width  / (float)Map1.img.Width;
+            ScaleY = (float) ClientSize.Height/ (float)Map1.img.Height;
+            off = new Bitmap(ClientSize.Width, ClientSize.Height);
+            CreateHero();
         }
 
         private void Form1_KeyUp(object sender, KeyEventArgs e)
@@ -169,10 +194,11 @@ namespace Project_MultiMedia
         }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Left) Hero.Lef = true;
-            if (e.KeyCode == Keys.Right) Hero.Rig = true;
-            if (e.KeyCode == Keys.Down) Hero.Dow = true;
-            if (e.KeyCode == Keys.Up) Hero.U = true;
+            if (e.KeyCode == Keys.Left&&!Hero.Elevator) Hero.Lef = true;
+            if (e.KeyCode == Keys.Right&& !Hero.Elevator) Hero.Rig = true;
+            if (e.KeyCode == Keys.Down&& !Hero.Elevator) Hero.Dow = true;
+            if (e.KeyCode == Keys.Up&& !Hero.Elevator) Hero.U = true;
+            if (e.KeyCode == Keys.ShiftKey) Hero.IF_Sprint = (Hero.IF_Sprint + 1) % Hero.Sprint.Count;
             if (e.KeyCode == Keys.B) //Single Bullet
             {
 
@@ -180,18 +206,34 @@ namespace Project_MultiMedia
             if (e.KeyCode == Keys.V) //Multi Bullet
             {
 
-                MessageBox.Show("Size:" + ScaleY);
+                MessageBox.Show("Elevator X:" + Map1.Elevator.X + ", Hero X="+Hero.PosX);
+                MessageBox.Show("   " + (Hero.Y + Hero.H) + "," + Hero.H+", "+ Map1.Elevator.Y + " , "+ Map1.Elevator.H);
             }
-            if (e.KeyCode == Keys.Y)
+            
+            if (e.KeyCode == Keys.Y &&
+                (isHit(Hero.PosX, Hero.Y, Hero.W, Hero.H,
+                 Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
+                || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
+                    Hero.PosX, Hero.Y , Hero.W, Hero.H)
+                ))
             {
                 Map1.Elevator.IF = 2;
                 Map1.Elevator.spd = -3;
+                Hero.Y = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
+                Hero.Elevator = true;
             }
-            if (e.KeyCode == Keys.U)
+            if (e.KeyCode == Keys.U &&
+                (isHit(Hero.PosX, Hero.Y , Hero.W, Hero.H,
+                 Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
+                || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
+                    Hero.PosX, Hero.Y, Hero.W + Hero.H , Hero.H)
+                ))
             {
                 Map1.Elevator.IF = 2;
                 Map1.Elevator.spd = 3;
                 if (Map1.Elevator.Y <= 0) Map1.Elevator.Y = 1;
+                Hero.Y = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
+                Hero.Elevator = true;
             }
 
 
@@ -229,7 +271,6 @@ namespace Project_MultiMedia
             {
                 Hero.Y += 5;
             }
-
             if (Hero.PosX >= ClientSize.Width / 2 && Hero.PosX < LimitX-(ClientSize.Width/2)-20)
             {
                 StartX = Hero.PosX - Hero.X;
@@ -290,7 +331,14 @@ namespace Project_MultiMedia
         }
         void DrawHero(Graphics g)
         {
-            if(!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X, Hero.Y*ScaleY,Hero.W,Hero.H);
+            for (int i = 0; i < 6; i++)
+            {
+                g.DrawImage(Hero.Heart[i][Hero.IF_Heart[i]],60*i,0,60,60);
+            }
+            //Draw Sprint
+            g.DrawImage(Hero.Sprint[Hero.IF_Sprint],0,70,Hero.Sprint[0].Width,Hero.Sprint[0].Height);
+
+            if(!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X, Hero.Y*ScaleY,Hero.W,Hero.H * ScaleY);
         }
         void DrawMap(Graphics g)
         {
