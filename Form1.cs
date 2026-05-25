@@ -36,11 +36,12 @@ namespace Project_MultiMedia
         public List<Bitmap> Right = new List<Bitmap>();
         public List<Bitmap> Jump = new List<Bitmap>();
         public List<Bitmap> Current;
-        public int HP;
+        public bool HP;
         public List<Bitmap> []Heart = new List<Bitmap>[6];
         public int []IF_Heart = new int[6];
         public List<Bitmap> Sprint = new List<Bitmap>();
         public int IF_Sprint;
+        public int Sprint_Counter;
         public int spd;
         public int IF,IF_MAX;
         public int Dir;
@@ -72,9 +73,21 @@ namespace Project_MultiMedia
         private void Tt_Tick(object sender, EventArgs e)
         {
             Map1Move();
-
+            Hero_ability();
             DrawBubb(CreateGraphics());
 
+        }
+        void Hero_ability()
+        {
+            if(Hero.IF_Sprint != 0)
+            {
+                Hero.Sprint_Counter++;
+                if (Hero.Sprint_Counter == 20)
+                {
+                    Hero.Sprint_Counter = 0;
+                    Hero.IF_Sprint--;
+                }
+            }
         }
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
@@ -167,7 +180,7 @@ namespace Project_MultiMedia
             Hero.Y = LimitY1;
             Hero.Dir = 1;
             Hero.Current = Hero.Right;
-            Hero.HP = 100;
+            Hero.HP = true;
 
         }
         private void Form1_Load(object sender, EventArgs e)
@@ -178,7 +191,28 @@ namespace Project_MultiMedia
             off = new Bitmap(ClientSize.Width, ClientSize.Height);
             CreateHero();
         }
-
+        void HeroDamage(int Damage)
+        {
+            int i;
+            for (i = 5; i >= 0; i--)
+            {
+                if (Hero.IF_Heart[i] != 4)
+                {
+                    while (Damage != 0)
+                    {
+                        Hero.IF_Heart[i]++;
+                        Damage--;
+                        if (Hero.IF_Heart[i] == 4) i--;
+                        if (i == -1)
+                        {
+                            Damage = 0;
+                            Hero.HP = false;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
         private void Form1_KeyUp(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Left) Hero.Lef = false;
@@ -198,7 +232,11 @@ namespace Project_MultiMedia
             if (e.KeyCode == Keys.Right&& !Hero.Elevator) Hero.Rig = true;
             if (e.KeyCode == Keys.Down&& !Hero.Elevator) Hero.Dow = true;
             if (e.KeyCode == Keys.Up&& !Hero.Elevator) Hero.U = true;
-            if (e.KeyCode == Keys.ShiftKey) Hero.IF_Sprint = (Hero.IF_Sprint + 1) % Hero.Sprint.Count;
+            if (e.KeyCode == Keys.ShiftKey)
+            {
+                HeroDamage(12);
+                if(Hero.IF_Sprint+1!=Hero.Sprint.Count)Hero.IF_Sprint ++;
+            }
             if (e.KeyCode == Keys.B) //Single Bullet
             {
 
