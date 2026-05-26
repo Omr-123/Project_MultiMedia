@@ -118,7 +118,7 @@ namespace Project_MultiMedia
                     Hero.Current = Hero.Left;
                 }
             }
-            if (Hero.U && (Hero.PosY + Hero.W - 5 > LimitY1)||
+            if (Hero.U && ((Hero.PosY + Hero.W - 5 > LimitY1)||
                 (
                     isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                         Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40)
@@ -126,7 +126,7 @@ namespace Project_MultiMedia
                     isHit(Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40,
                             Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                    )
-                )
+                ))
             {
                 Hero.PosY -= 5;
                 Hero.Y = Hero.PosY - StartY;
@@ -144,8 +144,8 @@ namespace Project_MultiMedia
             }
             if (Hero.Dow && Hero.PosY + Hero.Current[Hero.IF].Height + 5 < LimitY2)
             {
-                Hero.PosY += 5;
-                Hero.Y = Hero.PosY - StartY;
+                //Hero.PosY += 5;
+                //Hero.Y = Hero.PosY - StartY;
             }
             if (Hero.Dir == 0) Hero.Idle_Count++;
 
