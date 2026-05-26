@@ -220,7 +220,6 @@ namespace Project_MultiMedia
         }
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            MessageBox.Show("X -> " + e.X + " , Y -> " + e.Y);
         }
 
         void Map1Move()
