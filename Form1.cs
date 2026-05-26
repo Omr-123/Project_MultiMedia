@@ -28,11 +28,12 @@ namespace Project_MultiMedia
         public List<Obs> Coins = new List<Obs>();
         public List<Obs> Poition = new List<Obs>();
         public Obs Elevator = new Obs();
+        public Obs Ladder = new Obs();
     }
     public class CHero
     {
         public int X, Y, W, H;
-        public int PosX;
+        public int PosX,PosY;
         public bool Rig, Lef, U, Dow, Spt;
         public List<Bitmap> Idle = new List<Bitmap>();
         public List<Bitmap> Left = new List<Bitmap>();
@@ -59,6 +60,7 @@ namespace Project_MultiMedia
     public partial class Form1 : Form
     {
         int LimitX, LimitY1, LimitY2;
+        int BaseY=756;
         int StartX = 0, StartY = 0;
         float ScaleX, ScaleY;
         CMap Map1;
@@ -116,9 +118,18 @@ namespace Project_MultiMedia
                     Hero.Current = Hero.Left;
                 }
             }
-            if (Hero.U && Hero.Y + Hero.Current[Hero.IF].Height - 5 > LimitY1)
+            if (Hero.U && (Hero.PosY + Hero.W - 5 > LimitY1)||
+                (
+                    isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                        Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40)
+                    ||
+                    isHit(Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40,
+                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
+                   )
+                )
             {
-                Hero.Y -= 5;
+                Hero.PosY -= 5;
+                Hero.Y = Hero.PosY - StartY;
             }
             if (Hero.Rig && Hero.PosX + Hero.W+ Hero.spd + Hero.Sprt < LimitX)
             {
@@ -131,9 +142,10 @@ namespace Project_MultiMedia
                     Hero.Current = Hero.Right;
                 }
             }
-            if (Hero.Dow && Hero.Y + Hero.Current[Hero.IF].Height + 5 < LimitY2)
+            if (Hero.Dow && Hero.PosY + Hero.Current[Hero.IF].Height + 5 < LimitY2)
             {
-                Hero.Y += 5;
+                Hero.PosY += 5;
+                Hero.Y = Hero.PosY - StartY;
             }
             if (Hero.Dir == 0) Hero.Idle_Count++;
 
@@ -149,17 +161,26 @@ namespace Project_MultiMedia
             }
             else if (Hero.PosX <= ClientSize.Width) StartX = 0;
             Hero.X = Hero.PosX - StartX;
-
+            if (Hero.Y <= ClientSize.Height / 2 && StartY >= 0)
+            {
+                StartY = Hero.PosY - ClientSize.Height / 2;
+            }
+            else if (StartY <= 650)
+            {
+                StartY = 0;
+                LimitY1 -= BaseY;
+                LimitY2 -= BaseY+40;
+            }
             //Coins
             for (int i = 0; i < Map1.Coins.Count; i++)
             {
                 Obs pTrv = Map1.Coins[i];
                 if (
-                    isHit(Hero.PosX, Hero.Y, Hero.W, Hero.H,
+                    isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                         pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
                     ||
                     isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
-                            Hero.PosX, Hero.Y, Hero.W, Hero.H)
+                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                     )
                 {
                     Hero.Coins++;
@@ -172,11 +193,11 @@ namespace Project_MultiMedia
             {
                 Obs pTrv = Map1.Poition[i];
                 if (
-                    isHit(Hero.PosX, Hero.Y, Hero.W, Hero.H,
+                    isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                         pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
                     ||
                     isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
-                            Hero.PosX, Hero.Y, Hero.W, Hero.H)
+                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                     )
                 {
                     if (pTrv.Type == 5) HeroDamage(20);
@@ -205,14 +226,14 @@ namespace Project_MultiMedia
         void Map1Move()
         {
             //Elevator
-            if (Map1.Elevator.Y <= 0)
+            if (Map1.Elevator.Y <= 0+BaseY)
             {
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
                 else Map1.Elevator.IF = 0;
                 Hero.Elevator = false;
             }
-            else if (Map1.Elevator.Y + Map1.Elevator.H + Map1.Elevator.spd >= 599)
+            else if (Map1.Elevator.Y + Map1.Elevator.H + Map1.Elevator.spd >= 599+BaseY)
             {
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
@@ -222,7 +243,8 @@ namespace Project_MultiMedia
             else if (Map1.Elevator.IF != 0)
             {
                 Map1.Elevator.Y += Map1.Elevator.spd;
-                Hero.Y += Map1.Elevator.spd;
+                Hero.PosY += Map1.Elevator.spd;
+                Hero.Y = Hero.PosY - StartY;
                 Map1.Elevator.IF = 1;
             }
 
@@ -238,7 +260,7 @@ namespace Project_MultiMedia
         {
             Map1 = new CMap();
             Hero = new CHero();
-            Map1.img = new Bitmap("assets/Maps/1.png");
+            Map1.img = new Bitmap("assets/Maps/2.png");
 
 
             //Elevator
@@ -247,9 +269,15 @@ namespace Project_MultiMedia
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/0.png"));
             Map1.Elevator.X = 3453;
             Map1.Elevator.H = 220;
-            Map1.Elevator.Y = 599 - Map1.Elevator.H;
+            Map1.Elevator.Y = 599 - Map1.Elevator.H+BaseY;
             Map1.Elevator.W = 157;
             Map1.Elevator.spd = -3;
+
+            //Ladder
+            Map1.Ladder.X =2926;
+            Map1.Ladder.Y =758;
+            Map1.Ladder.W =3001-Map1.Ladder.X;
+            Map1.Ladder.H =1342-Map1.Ladder.Y;
 
             //Obsticals
             CreateObsticals();
@@ -263,7 +291,7 @@ namespace Project_MultiMedia
             Obs Pnn = new Obs();
             Pnn.imgs.Add(new Bitmap("assets/assets/poitions/5.png"));
             Pnn.X = 2500;
-            Pnn.Y = 419;
+            Pnn.Y = 419+BaseY;
             Pnn.W = Pnn.imgs[0].Width;
             Pnn.H = Pnn.imgs[0].Height;
             Pnn.Type = 5;
@@ -273,7 +301,7 @@ namespace Project_MultiMedia
         {
             Obs Pnn = new Obs();
             Pnn.X = 2105;
-            Pnn.Y = 282;
+            Pnn.Y = 282+BaseY;
             Pnn.W = 218;
             Pnn.H = 112;
             Map1.Obsticals.Add(Pnn);
@@ -287,7 +315,7 @@ namespace Project_MultiMedia
                 Pnn.imgs.Add(new Bitmap("assets/assets/coins/" + i + ".png"));
             }
             Pnn.X = 577;
-            Pnn.Y = 350;
+            Pnn.Y = 350+BaseY;
             Pnn.W = Pnn.imgs[0].Width;
             Pnn.H = Pnn.imgs[0].Height;
             Map1.Coins.Add(Pnn);
@@ -297,7 +325,7 @@ namespace Project_MultiMedia
                 Pnn.imgs.Add(new Bitmap("assets/assets/coins/" + i + ".png"));
             }
             Pnn.X = 2103;
-            Pnn.Y = 230;
+            Pnn.Y = 230+BaseY;
             Pnn.W = Pnn.imgs[0].Width;
             Pnn.H = Pnn.imgs[0].Height;
             Map1.Coins.Add(Pnn);
@@ -307,7 +335,7 @@ namespace Project_MultiMedia
                 Pnn.imgs.Add(new Bitmap("assets/assets/coins/" + i + ".png"));
             }
             Pnn.X = 2103;
-            Pnn.Y = 500;
+            Pnn.Y = 500+BaseY;
             Pnn.W = Pnn.imgs[0].Width;
             Pnn.H = Pnn.imgs[0].Height;
             Map1.Coins.Add(Pnn);
@@ -317,7 +345,7 @@ namespace Project_MultiMedia
                 Pnn.imgs.Add(new Bitmap("assets/assets/coins/" + i + ".png"));
             }
             Pnn.X = 3670;
-            Pnn.Y = 419;
+            Pnn.Y = 419+BaseY;
             Pnn.W = Pnn.imgs[0].Width;
             Pnn.H = Pnn.imgs[0].Height;
             Map1.Coins.Add(Pnn);
@@ -368,13 +396,14 @@ namespace Project_MultiMedia
             Hero.Dow = false;
             Hero.IF_MAX = Hero.Right.Count;
             LimitX = Map1.img.Width;
-            LimitY1 = 574;
-            LimitY2 = 700;
+            LimitY1 = 574+BaseY;
+            LimitY2 = 700+BaseY;
             Hero.PosX = 0;
+            Hero.PosY =LimitY1; 
             Hero.W = 150;
             Hero.H = 150;
             Hero.X = 0;
-            Hero.Y = LimitY1;
+            Hero.Y = 574;
             Hero.Dir = 0;
             Hero.Current = Hero.Idle;
             Hero.HP = true;
@@ -384,9 +413,9 @@ namespace Project_MultiMedia
         private void Form1_Load(object sender, EventArgs e)
         {
             CreateMap();
-            StartX = 0; StartY = 0;
-            ScaleX = (float)ClientSize.Width / (float)Map1.img.Width;
-            ScaleY = (float)ClientSize.Height / (float)Map1.img.Height;
+            StartX = 0; StartY = BaseY;
+            ScaleX = (float)ClientSize.Width / (float)1403f;
+            ScaleY = (float)ClientSize.Height / (float)(Map1.img.Height-BaseY);
             off = new Bitmap(ClientSize.Width, ClientSize.Height);
             CreateHero();
         }
@@ -469,28 +498,28 @@ namespace Project_MultiMedia
                 }
 
                 if (e.KeyCode == Keys.Y &&
-                    (isHit(Hero.PosX, Hero.Y, Hero.W, Hero.H,
+                    (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
                     || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
-                        Hero.PosX, Hero.Y, Hero.W, Hero.H)
+                        Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                     ))
                 {
                     Map1.Elevator.IF = 2;
                     Map1.Elevator.spd = -3;
-                    Hero.Y = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
+                    Hero.PosY = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
                     Hero.Elevator = true;
                 }
                 if (e.KeyCode == Keys.U &&
-                    (isHit(Hero.PosX, Hero.Y, Hero.W, Hero.H,
+                    (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
                     || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
-                        Hero.PosX, Hero.Y, Hero.W + Hero.H, Hero.H)
+                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
                     ))
                 {
                     Map1.Elevator.IF = 2;
                     Map1.Elevator.spd = 3;
                     if (Map1.Elevator.Y <= 0) Map1.Elevator.Y = 1;
-                    Hero.Y = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
+                    Hero.PosY = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
                     Hero.Elevator = true;
                 }
 
@@ -567,35 +596,36 @@ namespace Project_MultiMedia
             //Draw Hearts
             for (int i = 0; i < 6; i++)
             {
-                g.DrawImage(Hero.Heart[i][Hero.IF_Heart[i]], 60 * i, 0, 60, 60);
+                g.DrawImage(Hero.Heart[i][Hero.IF_Heart[i]], (60 * i)*ScaleX, 0, 60, 60);
             }
             //Draw Sprint
             g.DrawImage(Hero.Sprint[Hero.IF_Sprint], 0, 70, Hero.Sprint[0].Width, Hero.Sprint[0].Height);
             //Draw Coins Number
             Hero.IF_Coins = (Hero.IF_Coins + 1) % Hero.Coin.Count;
             g.DrawString("" + Hero.Coins, new Font("Arial",40), Brushes.White, ClientSize.Width - 50, 10);
-            g.DrawImage(Hero.Coin[Hero.IF_Coins], ClientSize.Width - 100, 15);
+            g.DrawImage(Hero.Coin[Hero.IF_Coins], (ClientSize.Width - 100), 15);
 
-            if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
+            if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
             
         }
         void DrawMap(Graphics g)
         {
             Map1.Dst = new Rectangle(0, 0, ClientSize.Width, ClientSize.Height);
-            Map1.Src = new Rectangle(StartX, StartY, ClientSize.Width, Map1.img.Height);
+            Map1.Src = new Rectangle(StartX, StartY, 1403, Map1.img.Height-BaseY);
             g.DrawImage(Map1.img, Map1.Dst, Map1.Src, GraphicsUnit.Pixel);
             //Elevator
-            g.DrawImage(Map1.Elevator.imgs[Map1.Elevator.IF], (Map1.Elevator.X - StartX), Map1.Elevator.Y * ScaleY, Map1.Elevator.W, Map1.Elevator.H * ScaleY);
+            g.DrawImage(Map1.Elevator.imgs[Map1.Elevator.IF], (Map1.Elevator.X - StartX)*ScaleX, (Map1.Elevator.Y - StartY) * ScaleY, Map1.Elevator.W, Map1.Elevator.H * ScaleY);
             //Draw Coins
             for (int i = 0; i < Map1.Coins.Count; i++)
             {
                 Obs pTrv = Map1.Coins[i];
-                g.DrawImage(pTrv.imgs[pTrv.IF], pTrv.X-StartX, pTrv.Y*ScaleY, pTrv.W, pTrv.H*ScaleY);
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y-StartY)*ScaleY, pTrv.W, pTrv.H*ScaleY);
             }
+            //Draw Poitions
             for (int i = 0; i < Map1.Poition.Count; i++)
             {
                 Obs pTrv = Map1.Poition[i];
-                g.DrawImage(pTrv.imgs[pTrv.IF], pTrv.X-StartX, pTrv.Y*ScaleY, pTrv.W, pTrv.H*ScaleY);
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y - StartY) * ScaleY, pTrv.W, pTrv.H*ScaleY);
             }
 
 
