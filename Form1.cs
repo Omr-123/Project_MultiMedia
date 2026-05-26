@@ -486,7 +486,6 @@ namespace Project_MultiMedia
                 {
                     Hero.Spt = true;
                     Hero.Sprt = 15;
-                    HeroDamage(5);
                 }
                 if (e.KeyCode == Keys.B) //Single Bullet
                 {
