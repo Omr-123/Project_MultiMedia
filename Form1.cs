@@ -38,29 +38,39 @@ namespace Project_MultiMedia
         public List<Bitmap> Idle = new List<Bitmap>();
         public List<Bitmap> Left = new List<Bitmap>();
         public List<Bitmap> Right = new List<Bitmap>();
-        public List<Bitmap> Jump = new List<Bitmap>();
+        public List<Bitmap> Jump_Right = new List<Bitmap>();
+        public List<Bitmap> Jump_Left = new List<Bitmap>();
+        public List<Bitmap> JumpDou_Right = new List<Bitmap>();
+        public List<Bitmap> JumpDou_Left = new List<Bitmap>();
         public List<Bitmap> DeadRig = new List<Bitmap>();
         public List<Bitmap> DeadLef = new List<Bitmap>();
+        public List<Bitmap> R_SBullet = new List<Bitmap>();
+        public Bitmap SBullett = new Bitmap("assets/Hero1/Bullets/Bullet.png");
+        public int SBulletX, SBulletY;
         public List<Bitmap> Current;
-        public bool HP;
+        public bool Elevator,HP,SBullet;
         public List<Bitmap>[] Heart = new List<Bitmap>[6];
         public int[] IF_Heart = new int[6];
         public List<Bitmap> Sprint = new List<Bitmap>();
-        public int IF_Sprint;
+        public int IF_Sprint,Jum,J1=1,J2=-3,Jumper_Counter;
         public int Sprint_Counter, Sprt_Count;
         public int Idle_Count;
         public int spd, Sprt;
         public int IF, IF_MAX;
         public int Dir;
-        public bool Elevator;
         public List<Bitmap> Coin= new List<Bitmap>();
         public int Coins;
         public int IF_Coins;
     }
+    public class Enemy
+    {
+        public int X,Y,W,H;
+
+    }
     public partial class Form1 : Form
     {
         int LimitX, LimitY1, LimitY2;
-        int BaseY=756;
+        int BaseY=0;
         int StartX = 0, StartY = 0;
         float ScaleX, ScaleY;
         CMap Map1;
@@ -93,84 +103,108 @@ namespace Project_MultiMedia
         }
         void Hero_Move()
         {
-            if (Hero.Spt == true && Hero.IF_Sprint != Hero.Sprint.Count - 1)
+            if (Hero.Jum == 0)
             {
-                Hero.Sprt_Count++;
-                if (Hero.Sprt_Count == 5)
-                {
-                    Hero.Sprt_Count = 0;
-                    Hero.IF_Sprint++;
-                }
-                Hero.Sprt = 15;
-            }
-            else if (Hero.Spt)
-            {
-                Hero.Sprt = 0;
-            }
-            if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt > 0)
-            {
-                Hero.PosX -= Hero.spd + Hero.Sprt;
-                if (Hero.Dir != 2)
-                {
-                    Hero.Dir = 2;
-                    Hero.IF = 1;
-                    Hero.IF_MAX = Hero.Left.Count;
-                    Hero.Current = Hero.Left;
-                }
-            }
-            if (Hero.U && ((Hero.PosY + Hero.W - 5 > LimitY1)||
-                (
-                    isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
-                        Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40)
-                    ||
-                    isHit(Map1.Ladder.X, Map1.Ladder.Y-40, Map1.Ladder.W, Map1.Ladder.H+40,
-                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
-                   )
-                ))
-            {
-                Hero.PosY -= 5;
-                Hero.Y = Hero.PosY - StartY;
-            }
-            if (Hero.Rig && Hero.PosX + Hero.W+ Hero.spd + Hero.Sprt < LimitX)
-            {
-                Hero.PosX += Hero.spd + Hero.Sprt;
-                if (Hero.Dir != 1)
-                {
-                    Hero.Dir = 1;
-                    Hero.IF = 1;
-                    Hero.IF_MAX = Hero.Left.Count;
-                    Hero.Current = Hero.Right;
-                }
-            }
-            if (Hero.Dow && Hero.PosY + Hero.Current[Hero.IF].Height + 5 < LimitY2)
-            {
-                //Hero.PosY += 5;
-                //Hero.Y = Hero.PosY - StartY;
-            }
-            if (Hero.Dir == 0) Hero.Idle_Count++;
+                if (Hero.Spt == true && Hero.IF_Sprint != Hero.Sprint.Count - 1)
 
-            if (Hero.Idle_Count == 5 || Hero.Dir != 0)
-            {
-                if((Hero.IF!=Hero.Current.Count-1&&!Hero.HP)||Hero.HP) Hero.IF = (Hero.IF + 1) % Hero.Current.Count;
-                Hero.Idle_Count = 0;
-            }
+                {
+                    Hero.Sprt_Count++;
+                    if (Hero.Sprt_Count == 5)
+                    {
+                        Hero.Sprt_Count = 0;
+                        Hero.IF_Sprint++;
+                    }
+                    Hero.Sprt = 15;
+                }
+                else if (Hero.Spt)
+                {
+                    Hero.Sprt = 0;
+                }
+                if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt > 0)
+                {
+                    Hero.PosX -= Hero.spd + Hero.Sprt;
+                    if (Hero.Dir != 2)
+                    {
+                        Hero.Dir = 2;
+                        Hero.IF = 1;
+                        Hero.IF_MAX = Hero.Left.Count;
+                        Hero.Current = Hero.Left;
+                    }
+                }
+                if (Hero.U && ((Hero.PosY + Hero.W - 5 > LimitY1) ||
+                    (
+                        isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                            Map1.Ladder.X, Map1.Ladder.Y - 40, Map1.Ladder.W, Map1.Ladder.H + 40)
+                        ||
+                        isHit(Map1.Ladder.X, Map1.Ladder.Y - 40, Map1.Ladder.W, Map1.Ladder.H + 40,
+                                Hero.PosX, Hero.PosY, Hero.W, Hero.H)
+                       )
+                    ))
+                {
+                    Hero.PosY -= 5;
+                }
+                if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX-Hero.W)
+                {
+                    Hero.PosX += Hero.spd + Hero.Sprt;
+                    if (Hero.Dir != 1)
+                    {
+                        Hero.Dir = 1;
+                        Hero.IF = 1;
+                        Hero.IF_MAX = Hero.Left.Count;
+                        Hero.Current = Hero.Right;
+                    }
+                }
+                if (Hero.Dow && Hero.PosY + Hero.H + 5 < LimitY2)
+                {
+                    Hero.PosY += 5;
+                }
+                if (Hero.Dir == 0) Hero.Idle_Count++;
 
+                if (Hero.Idle_Count == 5 || Hero.Dir != 0)
+                {
+                    if ((Hero.IF != Hero.Current.Count - 1 && !Hero.HP) || Hero.HP) Hero.IF = (Hero.IF + 1) % Hero.Current.Count;
+                    Hero.Idle_Count = 0;
+                }
+            }
+            else
+            {
+                if (Hero.IF + Hero.J1 == Hero.Current.Count)
+                {
+                    Hero.J1 = -1;
+                    Hero.J2 = 6;
+                }
+                Hero.Jumper_Counter++;
+                if (Hero.Jumper_Counter == 5)
+                {
+                    Hero.IF += Hero.J1;
+                    Hero.Jumper_Counter = 0;
+                }
+                if (Hero.IF == -1)
+                {
+                    if (Hero.Dir == 1) Hero.Current = Hero.Right;
+                    else Hero.Current = Hero.Left;
+                    Hero.Jum = 0;
+                    Hero.J1 = 1;
+                    Hero.J2 = -6;
+                    Hero.IF = 0;
+                }
+                else
+                {
+                    if (!CheckObsticals(0, Hero.J2))
+                    {
+                        Hero.PosY += Hero.J2;
+                    }
+                }
+
+            }
             if (Hero.PosX >= ClientSize.Width / 2 && Hero.PosX < LimitX - (ClientSize.Width / 2) - 20)
             {
                 StartX = Hero.PosX - Hero.X;
             }
             else if (Hero.PosX <= ClientSize.Width) StartX = 0;
             Hero.X = Hero.PosX - StartX;
-            if (Hero.Y <= ClientSize.Height / 2 && StartY >= 0)
-            {
-                StartY = Hero.PosY - ClientSize.Height / 2;
-            }
-            else if (StartY <= 650)
-            {
-                StartY = 0;
-                LimitY1 -= BaseY;
-                LimitY2 -= BaseY+40;
-            }
+ 
+            Hero.Y = Hero.PosY - StartY;
             //Coins
             for (int i = 0; i < Map1.Coins.Count; i++)
             {
@@ -208,7 +242,7 @@ namespace Project_MultiMedia
         }
         void Hero_ability()
         {
-            if (Hero.IF_Sprint != 0&&Hero.HP)
+            if (Hero.IF_Sprint != 0)
             {
                 Hero.Sprint_Counter++;
                 if (Hero.Sprint_Counter == 20)
@@ -217,11 +251,36 @@ namespace Project_MultiMedia
                     Hero.IF_Sprint--;
                 }
             }
+            if (Hero.SBulletX!=-1)
+            {
+                if (Hero.SBullet == true)
+                {
+                    if (Hero.IF + 1 == Hero.Current.Count)
+                    {
+                        if (Hero.Dir == 1) Hero.Current = Hero.Idle;
+                        else Hero.Current = Hero.Idle;
+                        Hero.IF = 0;
+                        Hero.SBullet = false;
+                    }
+                }
+                if (Hero.SBulletX > Hero.PosX) Hero.SBulletX += 32;
+                else Hero.SBulletX -= 32;
+                if(Hero.SBulletX<Hero.PosX-900 || Hero.SBulletX>Hero.PosX+900 || Hero.SBulletX<0 || Hero.SBulletX > LimitX)
+                {
+                    Hero.SBullet = false;
+                    Hero.SBulletX = -1;                    
+                    Hero.SBulletY = -1;                    
+                }
+            }
         }
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-        }
 
+        }
+        bool CheckObsticals(int X,int Y)
+        {
+            return false;
+        }
         void Map1Move()
         {
             //Elevator
@@ -259,7 +318,7 @@ namespace Project_MultiMedia
         {
             Map1 = new CMap();
             Hero = new CHero();
-            Map1.img = new Bitmap("assets/Maps/2.png");
+            Map1.img = new Bitmap("assets/Maps/1.png");
 
 
             //Elevator
@@ -389,10 +448,34 @@ namespace Project_MultiMedia
             {
                 Hero.Coin.Add(new Bitmap("assets/assets/coins/" + i + ".png"));
             }
+            for (int i = 5; i >= 0; i--)
+            {
+                Hero.JumpDou_Right.Add(new Bitmap("assets/Hero1/Right/Jump/" + i + ".png"));
+            }
+            for (int i = 5; i >= 3; i--)
+            {
+                Hero.Jump_Right.Add(new Bitmap("assets/Hero1/Right/Jump/" + i + ".png"));
+            }       
+            for (int i = 5; i >= 0; i--)
+            {
+                Hero.JumpDou_Left.Add(new Bitmap("assets/Hero1/Right/Jump/" + i + ".png"));
+            }
+            for (int i = 5; i >= 3; i--)
+            {
+                Hero.Jump_Left.Add(new Bitmap("assets/Hero1/Right/Jump/" + i + ".png"));
+            }
+            for (int i = 133; i <= 136; i++)
+            {
+                Hero.R_SBullet.Add(new Bitmap("assets/Hero1/Right/" + i + ".png"));
+            }
+            Hero.SBullett.MakeTransparent(Color.White);
+            Hero.SBullet = false;
             Hero.Rig = false;
             Hero.Lef = false;
             Hero.U = false;
             Hero.Dow = false;
+            Hero.SBulletX = -1;
+            Hero.SBulletY = -1;
             Hero.IF_MAX = Hero.Right.Count;
             LimitX = Map1.img.Width;
             LimitY1 = 574+BaseY;
@@ -459,7 +542,7 @@ namespace Project_MultiMedia
                 Hero.Spt = false;
             }
 
-            if (!Hero.Lef && !Hero.Rig && !Hero.Dow && !Hero.U&&Hero.HP)
+            if (!Hero.Lef && !Hero.Rig && !Hero.Dow && !Hero.U&&Hero.HP && !Hero.SBullet)
             {
                 Hero.Dir = 0;
                 Hero.Current = Hero.Idle;
@@ -481,14 +564,44 @@ namespace Project_MultiMedia
                 if ((e.KeyCode == Keys.Right || e.KeyCode == Keys.D) && !Hero.Elevator) Hero.Rig = true;
                 if ((e.KeyCode == Keys.Down || e.KeyCode == Keys.S) && !Hero.Elevator) Hero.Dow = true;
                 if ((e.KeyCode == Keys.Up || e.KeyCode == Keys.W) && !Hero.Elevator) Hero.U = true;
+                if (e.KeyCode == Keys.Space && !Hero.Elevator&&Hero.Jum!=2)
+                {
+                    Hero.IF = 0;
+                    if (Hero.Jum == 0)
+                    {
+                        Hero.Jum = 1;
+                        if (Hero.Dir == 1) Hero.Current = Hero.Jump_Right;
+                        else Hero.Current = Hero.Jump_Left;
+                    }
+                    else if (Hero.Jum == 1)
+                    {
+                        Hero.Jum = 2;
+                        if (Hero.Dir == 1) Hero.Current = Hero.JumpDou_Right;
+                        else Hero.Current = Hero.JumpDou_Left;
+                    }
+                }
+                
                 if (e.KeyCode == Keys.ShiftKey && Hero.IF_Sprint < Hero.Sprint.Count - 1)
                 {
                     Hero.Spt = true;
                     Hero.Sprt = 15;
                 }
-                if (e.KeyCode == Keys.B) //Single Bullet
+                if (e.KeyCode == Keys.B&&Hero.SBulletX ==-1) //Single Bullet
                 {
+                    Hero.SBullet = true;
+                    Hero.SBulletY = Hero.PosY + Hero.H / 2;
+                    Hero.IF = 0;
+                    if (Hero.Dir == 1 || Hero.Dir==0)
+                    {
+                        Hero.Current = Hero.R_SBullet;
+                        Hero.SBulletX = Hero.PosX + Hero.W + 10;
+                    }
+                    else
+                    {
+                        Hero.Current = Hero.R_SBullet;
 
+                        Hero.SBulletX = Hero.PosX -10;
+                    }
                 }
                 if (e.KeyCode == Keys.V) //Multi Bullet
                 {
@@ -602,7 +715,7 @@ namespace Project_MultiMedia
             Hero.IF_Coins = (Hero.IF_Coins + 1) % Hero.Coin.Count;
             g.DrawString("" + Hero.Coins, new Font("Arial",40), Brushes.White, ClientSize.Width - 50, 10);
             g.DrawImage(Hero.Coin[Hero.IF_Coins], (ClientSize.Width - 100), 15);
-
+            if (Hero.SBulletX != -1) g.DrawImage(Hero.SBullett, Hero.SBulletX - StartX, Hero.SBulletY * ScaleY, 60, 60);
             if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
             
         }
