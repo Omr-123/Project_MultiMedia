@@ -14,7 +14,7 @@ namespace Project_MultiMedia
     {
         public int X, Y, W, H;
         public List<Bitmap> imgs = new List<Bitmap>();
-        public int IF;
+        public int IF,Counter;
         public int spd;
         public int Type;
     }
@@ -27,6 +27,8 @@ namespace Project_MultiMedia
         public List<Obs> Obsticals = new List<Obs>();
         public List<Obs> Coins = new List<Obs>();
         public List<Obs> Poition = new List<Obs>();
+        public List<Obs> Laser= new List<Obs>();
+        
         public Obs Elevator = new Obs();
         public Obs Ladder = new Obs();
     }
@@ -66,7 +68,22 @@ namespace Project_MultiMedia
     public class Enemy
     {
         public int X,Y,W,H;
-
+        public List<Bitmap> Move = new List<Bitmap>();
+        public List<Bitmap> Current;
+        public List<int> FireX = new List<int>(),FireY=new List<int>();
+        public Bitmap Bullet = new Bitmap("assets/enemy3/Bullet.png");
+        public List<Bitmap> Fly = new List<Bitmap>();
+        public List<Bitmap> Ready = new List<Bitmap>();
+        public int IF;
+        public string Dir="right";
+        public int spd = 10;
+        public int Counter;
+        public int HP=100;
+    }
+    public class planes
+    { 
+        public Bitmap img;
+        public int X=-1, Y=0, W, H;
     }
     public partial class Form1 : Form
     {
@@ -76,7 +93,9 @@ namespace Project_MultiMedia
         float ScaleX, ScaleY;
         bool isDrag=false;
         CMap Map1;
+        List<Enemy> Enemy2 = new List<Enemy>();
         Bitmap off;
+        planes Plane;
         CHero Hero;
         int Cou = 0;
         Timer tt = new Timer();
@@ -104,9 +123,9 @@ namespace Project_MultiMedia
         {
             Hero_Move();
             Map1Move();
+            LaserMove();
+            MoveEnemy();
             Hero_ability();
-
-
             DrawBubb(CreateGraphics());
         }
         void Hero_Move()
@@ -293,6 +312,28 @@ namespace Project_MultiMedia
                     Hero.SBulletX = -1;                    
                     Hero.SBulletY = -1;                    
                 }
+
+                for (int i = 0; i < Enemy2.Count; i++)
+                {
+                    Enemy pTrv = Enemy2[i];
+                    if (isHit(Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height,
+                     pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
+                    || isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
+                        Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height)
+                    )
+                    {
+                        Hero.SBullet = false;
+                        Hero.SBulletX = -1;
+                        Hero.SBulletY = -1;
+                        pTrv.HP -= 40;
+                        if (pTrv.HP <= 0)
+                        {
+                            Enemy2.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+
             }
             if (isDrag)
             {
@@ -340,14 +381,36 @@ namespace Project_MultiMedia
                     Hero.MBulletY.RemoveAt(i);
                     i--;
                 }
+                else
+                {
+                    //Damage Enemy2
+                    for (int i2 = 0; i2 < Enemy2.Count; i2++)
+                    {
+                        Enemy pTrv = Enemy2[i2];
+                        if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height,
+                         pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
+                        || isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
+                            Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height)
+                        )
+                        {
+                            Hero.MBullet.RemoveAt(i);
+                            Hero.MBulletX.RemoveAt(i);
+                            Hero.MBulletY.RemoveAt(i);
+                            i--;
+                            pTrv.HP -= 40;
+                            if (pTrv.HP <= 0)
+                            {
+                                Enemy2.RemoveAt(i2);
+                                i2--;
+                            }
+                        }
+                    }
+                }
             }
         }
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Left&&!Hero.HP&&Hero.Jum==0)
-            {
-                isDrag = true;
-            }
+            if (e.Button == MouseButtons.Left&&Hero.HP&&Hero.Jum==0) isDrag = true;
         }
         bool CheckObsticals(int X,int Y)
         {
@@ -385,13 +448,134 @@ namespace Project_MultiMedia
                 Obs pTrv = Map1.Coins[i];
                 pTrv.IF = (pTrv.IF + 1) % pTrv.imgs.Count;
             }
+
+            //Plane Move
+            if (Hero.PosX > 1388 && Plane.X == -1)
+            {
+                Plane.X = 2;
+                Plane.Y = 0;
+              
+            }
+            else if (Plane.X + Plane.W > LimitX) Plane.X = -2;
+            else if(Plane.X>=0) Plane.X += 20;
+        }
+        void MoveEnemy()
+        {
+            if((Plane.X>=1840&&Plane.X<=1900 && Enemy2.Count==0)|| (Plane.X >= 2100 && Plane.X <= 2150 && Enemy2.Count == 1))
+            {
+                Enemy Pnn = new Enemy();
+                for (int i = 182; i <= 194; i++) //Fly
+                {
+                    Pnn.Fly.Add(new Bitmap("assets/enemy3/" + i + ".png"));
+                }
+                for (int i = 199; i <= 204; i++) //Ready
+                {
+                    Pnn.Ready.Add(new Bitmap("assets/enemy3/" + i + ".png"));
+                }
+                for (int i = 41; i <= 62; i++) //Ready
+                {
+                    Pnn.Move.Add(new Bitmap("assets/enemy3/" + i + ".png"));
+                }
+                Pnn.X = Plane.X;
+                Pnn.Y = Plane.Y + Plane.H;
+                Pnn.W = Pnn.Fly[0].Width;
+                Pnn.H = Pnn.Fly[0].Height;
+                Pnn.Current = Pnn.Fly;
+                Enemy2.Add(Pnn);
+            }
+
+
+            for (int i = 0; i < Enemy2.Count; i++)
+            {
+                Enemy pTrv = Enemy2[i];
+
+                pTrv.Counter++;
+                if (pTrv.Counter == 7 || (pTrv.IF>=12 &&pTrv.IF<=14))
+                {
+                    pTrv.IF = (pTrv.IF + 1) % pTrv.Current.Count;
+                    pTrv.Counter = 0;
+                }
+                if (pTrv.Current == pTrv.Fly)
+                {
+                    if(pTrv.Y+5<566)pTrv.Y += 5;
+                }
+                if (pTrv.Current == pTrv.Fly && pTrv.Y +5 > 566)
+                {
+                    pTrv.Current = pTrv.Ready;
+                    pTrv.IF = 0;
+                }
+                else if (pTrv.Current == pTrv.Ready && pTrv.IF + 1 == pTrv.Ready.Count)
+                {
+                    pTrv.Current = pTrv.Move;
+                    pTrv.IF = 0;
+                }
+                if (pTrv.Current == pTrv.Move)
+                {
+                    if (pTrv.IF == 12)
+                    {
+                        pTrv.FireY.Add(pTrv.Y);
+                        if (pTrv.Dir == "right") pTrv.FireX.Add(pTrv.X+pTrv.W+ 10);
+                        else pTrv.FireX.Add(pTrv.X- 10);
+                    }
+                    Enemy2Damage();
+                    if (pTrv.X > 2400)
+                    {
+                        pTrv.spd = -10;
+                        pTrv.Dir = "left"; 
+                        pTrv.W *= -1;
+                        pTrv.X = 2350;
+                    }
+                    if (pTrv.X < 1750)
+                    {
+                        pTrv.spd = 10;
+                        pTrv.Dir = "right";
+                        pTrv.X = 1780;
+                        pTrv.W *= -1;
+                    }
+                    pTrv.X += pTrv.spd;
+                }
+
+            }
+        }
+        void Enemy2Damage()
+        {
+            //Hero Damage
+
+            for (int i2 = 0; i2 < Enemy2.Count; i2++)
+            {
+                Enemy pTrv = Enemy2[i2];
+                for (int i = 0; i < pTrv.FireX.Count; i++)
+                {
+                    if (pTrv.FireX[i] > pTrv.X) pTrv.FireX[i] += 10;
+                    else pTrv.FireX[i] -= 10;
+
+                    if (pTrv.FireX[i] < pTrv.X - 500 || pTrv.FireX[i] > pTrv.X + 500 || pTrv.FireX[i] < 0 || pTrv.FireX[i] > LimitX)
+                    {
+                        pTrv.FireX.RemoveAt(i);
+                        pTrv.FireY.RemoveAt(i);
+                        i--;
+                    }
+                    else if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                     pTrv.FireX[i], pTrv.FireY[i], pTrv.Bullet.Width, pTrv.Bullet.Height)
+                    || isHit(pTrv.FireX[i], pTrv.FireY[i], pTrv.Bullet.Width, pTrv.Bullet.Height,
+                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
+                    )
+                    {
+                        HeroDamage(1);
+                        pTrv.FireX.RemoveAt(i);
+                        pTrv.FireY.RemoveAt(i);
+                        i--;
+                    }
+
+                }
+            }
+
         }
         void CreateMap()
         {
             Map1 = new CMap();
             Hero = new CHero();
             Map1.img = new Bitmap("assets/Maps/1.png");
-
 
             //Elevator
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/1.png"));
@@ -415,6 +599,64 @@ namespace Project_MultiMedia
             CreateCoins();
             //Poitions
             CreatePoitions();
+            //Laser
+            for (int i = 1; i <= 6; i++)
+            {
+                Obs Pnn = new Obs();
+                for (int i2 = 0; i2 < 6; i2++)
+                {
+                    Pnn.imgs.Add(new Bitmap("assets/assets/laser/" + i2 + ".png"));
+                }
+                Pnn.W = Pnn.imgs[0].Width;
+                Pnn.H = 678 - 403;
+                Pnn.X = 4001 + (i * Pnn.W/2);
+                Pnn.Y = 402;
+
+                Map1.Laser.Add(Pnn);
+            }
+            //Plane
+            Plane = new planes();
+            Plane.img = new Bitmap("assets/Plane.png");
+            Plane.img.MakeTransparent(Color.White);
+            Plane.W = Plane.img.Width / 2;
+            Plane.H = Plane.img.Height/2;
+        }
+        void LaserMove()
+        {
+            if (Hero.Coins >= 2)
+            {
+                for (int i = 0; i < Map1.Laser.Count; i++)
+                {
+                    Obs pTrv = Map1.Laser[i];
+                    pTrv.Counter++;
+                    if (pTrv.IF + 1 == pTrv.imgs.Count)
+                    {
+                        Map1.Laser.RemoveAt(i);
+                        i--;
+                    }
+                    else if(pTrv.Counter==5)
+                    {
+                        pTrv.IF = (pTrv.IF + 1) % pTrv.imgs.Count;
+                        pTrv.Counter = 0;
+                    }
+
+                }
+            }
+            else
+            {
+                for (int i = 0; i < Map1.Laser.Count; i++)
+                {
+                    Obs pTrv = Map1.Laser[i];
+                    if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                     pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
+                    || isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
+                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
+                    )
+                    {
+                        HeroDamage(1);
+                    }
+                }
+            }
         }
         void CreatePoitions()
         {
@@ -807,6 +1049,28 @@ namespace Project_MultiMedia
                 Obs pTrv = Map1.Poition[i];
                 g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y - StartY) * ScaleY, pTrv.W, pTrv.H*ScaleY);
             }
+            //Draw Laser
+            for (int i = 0; i < Map1.Laser.Count; i++)
+            {
+                Obs pTrv = Map1.Laser[i];
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X - StartX)*ScaleX, pTrv.Y * ScaleY, pTrv.W, pTrv.H * ScaleY);
+            }
+            //Draw Plane
+            if (Plane.X >= 0) g.DrawImage(Plane.img, (Plane.X - StartX) * ScaleX, Plane.Y, Plane.W, Plane.H*ScaleY);
+
+            //Draw Enemy3
+            for (int i = 0; i < Enemy2.Count; i++)
+            {
+                Enemy pTrv = Enemy2[i];
+                g.DrawImage(pTrv.Current[pTrv.IF], (pTrv.X - StartX), pTrv.Y * ScaleY, pTrv.W, pTrv.H * ScaleY);
+                for (int i2 = 0; i2 < pTrv.FireX.Count; i2++)
+                {
+                    int A = 1;
+                    if (pTrv.FireX[i2] < pTrv.X) A = -1;
+                    g.DrawImage(pTrv.Bullet, pTrv.FireX[i2]-StartX, pTrv.FireY[i2]*ScaleY, pTrv.Bullet.Width*A, pTrv.Bullet.Height*ScaleY);
+                }
+            }
+
 
 
         }
