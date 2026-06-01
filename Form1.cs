@@ -85,6 +85,34 @@ namespace Project_MultiMedia
         public Bitmap img;
         public int X=-1, Y=0, W, H;
     }
+    public class Big_Boss
+    {
+        public int X=-1, Y, W, H;
+        public string Status="Phase1",Dir="left",Action;
+        public List<Bitmap> Health1 = new List<Bitmap>();
+        public List<Bitmap> Health2 = new List<Bitmap>();
+        public List<Bitmap> CurrentHealth= new List<Bitmap>();
+        public List<Bitmap> Idle= new List<Bitmap>();
+        public List<Bitmap> Idle_Aura= new List<Bitmap>();
+        public List<Bitmap> Move= new List<Bitmap>();
+        public List<Bitmap> Move_Aura= new List<Bitmap>();
+        public List<Bitmap> Blade= new List<Bitmap>();
+        public Bitmap BladeEffect;
+
+        public List<Bitmap> Teleport= new List<Bitmap>();
+        public List<Bitmap> Fist= new List<Bitmap>();
+        public List<Bitmap> Sword= new List<Bitmap>();
+        public List<Bitmap> Freeze= new List<Bitmap>();
+        public List<Bitmap> Damage= new List<Bitmap>();
+        public Bitmap Fire;
+
+        public List<Bitmap> Current= new List<Bitmap>();
+        public List<Bitmap> Back= new List<Bitmap>();
+        public int IF_Health,Hit,Phase=1,IF,Counter_Hit,Counter_Damage;
+
+
+
+    }
     public partial class Form1 : Form
     {
         int LimitX, LimitY1, LimitY2;
@@ -92,8 +120,9 @@ namespace Project_MultiMedia
         int StartX = 0, StartY = 0;
         float ScaleX, ScaleY;
         bool isDrag=false;
+        Big_Boss Boss;
         CMap Map1;
-        List<Enemy> Enemy2 = new List<Enemy>();
+        List<Enemy> Enemy2;
         Bitmap off;
         planes Plane;
         CHero Hero;
@@ -125,7 +154,9 @@ namespace Project_MultiMedia
             Map1Move();
             LaserMove();
             MoveEnemy();
+            MoveBoss();
             Hero_ability();
+            MoveBoss();
             DrawBubb(CreateGraphics());
         }
         void Hero_Move()
@@ -165,19 +196,20 @@ namespace Project_MultiMedia
                     if (Hero.Spt && Hero.IF_Sprint != Hero.Sprint.Count - 1) Hero.Current = Hero.Run;
                     else Hero.Current = Hero.Move;
                 } 
-                if (Hero.U && ((Hero.PosY + Hero.W - 5 > LimitY1) ||
+                if (Hero.U && ((Hero.PosY + Hero.H - 5 > LimitY1) ||
                     (
-                        isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
-                            Map1.Ladder.X, Map1.Ladder.Y - 40, Map1.Ladder.W, Map1.Ladder.H + 40)
+                        isHit(Hero.PosX, Hero.PosY, Hero.W-40, Hero.H,
+                            Map1.Ladder.X, Map1.Ladder.Y, Map1.Ladder.W, Map1.Ladder.H)
                         ||
-                        isHit(Map1.Ladder.X, Map1.Ladder.Y - 40, Map1.Ladder.W, Map1.Ladder.H + 40,
-                                Hero.PosX, Hero.PosY, Hero.W, Hero.H)
+                        isHit(Map1.Ladder.X, Map1.Ladder.Y, Map1.Ladder.W, Map1.Ladder.H,
+                                Hero.PosX, Hero.PosY, Hero.W-40, Hero.H)
                        )
+                       && (Hero.PosY - 5 > 26)
                     ))
                 {
                     Hero.PosY -= 5;
                 }
-                if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX-Hero.W)
+                if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX-Hero.W-20)
                 {
                     Hero.PosX += Hero.spd + Hero.Sprt;
                     if (Hero.Dir != "right")
@@ -243,7 +275,7 @@ namespace Project_MultiMedia
             }
             else if (Hero.PosX <= ClientSize.Width) StartX = 0;
             Hero.X = Hero.PosX - StartX;
- 
+            
             Hero.Y = Hero.PosY - StartY;
             //Coins
             for (int i = 0; i < Map1.Coins.Count; i++)
@@ -291,7 +323,7 @@ namespace Project_MultiMedia
                     Hero.IF_Sprint--;
                 }
             }
-            if (Hero.SBulletX!=-1)
+            if (Hero.SBulletX != -1)
             {
                 if (Hero.SBullet == true)
                 {
@@ -299,20 +331,14 @@ namespace Project_MultiMedia
                     {
                         Hero.Current = Hero.Idle;
                         if (Hero.Dir == "right" && Hero.W < 0) Hero.W *= -1;
-                        else if (Hero.Dir == "left" && Hero.W > 0) Hero.W *= -1 ;
+                        else if (Hero.Dir == "left" && Hero.W > 0) Hero.W *= -1;
                         Hero.IF = 0;
                         Hero.SBullet = false;
                     }
                 }
                 if (Hero.SBulletX > Hero.PosX) Hero.SBulletX += 32;
                 else Hero.SBulletX -= 32;
-                if(Hero.SBulletX<Hero.PosX-900 || Hero.SBulletX>Hero.PosX+900 || Hero.SBulletX<0 || Hero.SBulletX > LimitX)
-                {
-                    Hero.SBullet = false;
-                    Hero.SBulletX = -1;                    
-                    Hero.SBulletY = -1;                    
-                }
-
+                //Damage Enemy2
                 for (int i = 0; i < Enemy2.Count; i++)
                 {
                     Enemy pTrv = Enemy2[i];
@@ -333,6 +359,49 @@ namespace Project_MultiMedia
                         }
                     }
                 }
+                //Damage Big_Boss
+                if (Boss.X != -1)
+                {
+                    if (isHit(Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height,
+                     Boss.X, Boss.Y, Boss.W, Boss.H)
+                    || isHit(Boss.X, Boss.Y, Boss.W, Boss.H,
+                        Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height)
+                    )
+                    {
+                        Boss.Back = Boss.Current;
+                        Boss.Current = Boss.Damage;
+                        Hero.SBullet = false;
+                        Hero.SBulletX = -1;
+                        Hero.SBulletY = -1;
+                        Boss.Hit += 2;
+                        if (Boss.Hit >= 3)
+                        {
+                            Boss.Hit = 0;
+                            Boss.IF_Health++;
+                            if (Boss.IF_Health == Boss.CurrentHealth.Count - 1)
+                            {
+                                if (Boss.Status == "Phase1")
+                                {
+                                    Boss.Status = "Phase2";
+                                    Boss.IF_Health = 0;
+                                    Boss.CurrentHealth = Boss.Health2;
+                                }
+                                else
+                                {
+                                    Boss.Status = "End";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (Hero.SBulletX < Hero.PosX - 900 || Hero.SBulletX > Hero.PosX + 900 || Hero.SBulletX < 0 || Hero.SBulletX > LimitX)
+                {
+                    Hero.SBullet = false;
+                    Hero.SBulletX = -1;
+                    Hero.SBulletY = -1;
+                }
+
 
             }
             if (isDrag)
@@ -352,7 +421,7 @@ namespace Project_MultiMedia
                     else
                     {
                         Hero.MBulletX.Add(Hero.PosX - 10);
-                        
+
                     }
 
                     Cou = 0;
@@ -405,6 +474,43 @@ namespace Project_MultiMedia
                             }
                         }
                     }
+                    //Damage Boss
+                    if (Boss.X != -1)
+                    {
+                        if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height,
+                         Boss.X, Boss.Y, Boss.W, Boss.H)
+                        || isHit(Boss.X, Boss.Y, Boss.W, Boss.H,
+                            Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height)
+                        )
+                        {
+                            Boss.Back = Boss.Current;
+                            Boss.Current = Boss.Damage;
+                            Hero.MBullet.RemoveAt(i);
+                            Hero.MBulletX.RemoveAt(i);
+                            Hero.MBulletY.RemoveAt(i);
+                            i--;
+                            Boss.Hit ++;
+                            if (Boss.Hit >= 3)
+                            {
+                                Boss.Hit = 0;
+                                Boss.IF_Health++;
+                                if (Boss.IF_Health == Boss.CurrentHealth.Count - 1)
+                                {
+                                    if (Boss.Status == "Phase1")
+                                    {
+                                        Boss.Status = "Phase2";
+                                        Boss.IF_Health = 0;
+                                        Boss.CurrentHealth = Boss.Health2;
+                                    }
+                                    else
+                                    {
+                                        Boss.Status = "End";
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                 }
             }
         }
@@ -515,7 +621,7 @@ namespace Project_MultiMedia
                     {
                         pTrv.FireY.Add(pTrv.Y);
                         if (pTrv.Dir == "right") pTrv.FireX.Add(pTrv.X+pTrv.W+ 10);
-                        else pTrv.FireX.Add(pTrv.X- 10);
+                        else pTrv.FireX.Add(pTrv.X- 10+pTrv.W);
                     }
                     Enemy2Damage();
                     if (pTrv.X > 2400)
@@ -576,7 +682,7 @@ namespace Project_MultiMedia
             Map1 = new CMap();
             Hero = new CHero();
             Map1.img = new Bitmap("assets/Maps/1.png");
-
+            Enemy2 = new List<Enemy>();
             //Elevator
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/1.png"));
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/2.png"));
@@ -588,10 +694,10 @@ namespace Project_MultiMedia
             Map1.Elevator.spd = -3;
 
             //Ladder
-            Map1.Ladder.X =2926;
-            Map1.Ladder.Y =758;
-            Map1.Ladder.W =3001-Map1.Ladder.X;
-            Map1.Ladder.H =1342-Map1.Ladder.Y;
+            Map1.Ladder.X =2911;
+            Map1.Ladder.Y =37;
+            Map1.Ladder.W =2999-Map1.Ladder.X;
+            Map1.Ladder.H =583-Map1.Ladder.Y;
 
             //Obsticals
             CreateObsticals();
@@ -620,6 +726,61 @@ namespace Project_MultiMedia
             Plane.img.MakeTransparent(Color.White);
             Plane.W = Plane.img.Width / 2;
             Plane.H = Plane.img.Height/2;
+        }
+        void CreateBoss()
+        {
+            for (int i = 0; i <=5; i++)
+            {
+                Boss.Health1.Add(new Bitmap("assets/big_boss/health/" + i + ".png"));
+            }
+            for (int i = 30; i <=35; i++)
+            {
+                Boss.Health2.Add(new Bitmap("assets/big_boss/health/" + i + ".png"));
+            }
+            for (int i = 0; i <= 6; i++)
+            {
+                Boss.Idle.Add(new Bitmap("assets/big_boss/11/" + i + ".png"));
+            }
+            for (int i = 0; i <= 2; i++)
+            {
+                Boss.Idle_Aura.Add(new Bitmap("assets/big_boss/1/" + i + ".png"));
+            }
+            for (int i = 0; i <= 6; i++)
+            {
+                Boss.Damage.Add(new Bitmap("assets/big_boss/3/" + i + ".png"));
+            }
+            Boss.Fire = new Bitmap("assets/big_boss/4/8.png");
+            for (int i = 4; i >= 1; i--)
+            {
+                Boss.Blade.Add(new Bitmap("assets/big_boss/8/" + i + ".png"));
+            }
+            Boss.BladeEffect = new Bitmap("assets/big_boss/8/0.png");
+            for (int i = 0; i <= 2; i++)
+            {
+                Boss.Sword.Add(new Bitmap("assets/big_boss/9/" + i + ".png"));
+            } 
+            for (int i = 0; i <= 11; i++)
+            {
+                Boss.Fist.Add(new Bitmap("assets/big_boss/2/" + i + ".png"));
+            }
+            Boss.Action = "Idle";
+            Boss.CurrentHealth = Boss.Health1;
+            Boss.Current =Boss.Idle ;
+            Boss.W =-Boss.Idle[0].Width;
+            Boss.H =Boss.Idle[0].Height;
+            Boss.Y = 513;
+        }
+        void MoveBoss()
+        {
+            if (Boss.X != -1)
+            {
+                
+            }
+            else if(Hero.PosX>=2 && Hero.PosX<=4350&&Boss.X == -1)
+            {
+                //Boss.X = 5278 + Boss.W;
+                Boss.X = 1000 + Boss.W;
+            }
         }
         void LaserMove()
         {
@@ -804,7 +965,10 @@ namespace Project_MultiMedia
             ScaleY = (float)ClientSize.Height / (float)(Map1.img.Height-BaseY);
             off = new Bitmap(ClientSize.Width, ClientSize.Height);
             Hero = new CHero();
-            CreateHero();
+            Boss = new Big_Boss();
+            CreateHero(); 
+            CreateBoss();
+
         }
         void HeroDamage(int Damage)
         {
@@ -997,6 +1161,7 @@ namespace Project_MultiMedia
             g.Clear(Color.White);
             DrawMap(g);
             DrawHero(g);
+            DrawBoss(g);
             if (Hero.HP)
             {
                 //Hero
@@ -1028,6 +1193,18 @@ namespace Project_MultiMedia
                 int Neg = 1;
                 if (Hero.MBulletX[i] < Hero.PosX) Neg = -1;
                 g.DrawImage(Hero.MBullett, Hero.MBulletX[i] - StartX, Hero.MBulletY[i] * ScaleY, 60* Neg, 60);
+            }
+        }
+        void DrawBoss(Graphics g)
+        {
+            if (Boss.X != -1)
+            {
+                //Draw Heatlh Bar Of Boss
+                g.DrawImage(Boss.CurrentHealth[Boss.IF_Health], (ClientSize.Width/2)-50, 2*ScaleY);
+
+                //Draw Boss
+                g.DrawImage(Boss.Current[Boss.IF], (Boss.X - StartX) * ScaleX, Boss.Y * ScaleY, Boss.W, Boss.H);
+
             }
         }
         void DrawMap(Graphics g)
