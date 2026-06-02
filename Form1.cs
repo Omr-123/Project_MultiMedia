@@ -88,27 +88,33 @@ namespace Project_MultiMedia
     public class Big_Boss
     {
         public int X=-1, Y, W, H;
-        public string Status="Phase1",Dir="left",Action;
+        public string Status="Phase1",Dir="left",Action="Idle";
         public List<Bitmap> Health1 = new List<Bitmap>();
         public List<Bitmap> Health2 = new List<Bitmap>();
         public List<Bitmap> CurrentHealth= new List<Bitmap>();
+        //Phase 1
         public List<Bitmap> Idle= new List<Bitmap>();
-        public List<Bitmap> Idle_Aura= new List<Bitmap>();
         public List<Bitmap> Move= new List<Bitmap>();
+        public List<Bitmap> Fist= new List<Bitmap>();
+        public List<Bitmap> Sword= new List<Bitmap>();
+        //Phase 2
+        public List<Bitmap> Idle_Aura= new List<Bitmap>();
         public List<Bitmap> Move_Aura= new List<Bitmap>();
         public List<Bitmap> Blade= new List<Bitmap>();
         public Bitmap BladeEffect;
-
+        public int BladeX=-1, BladeY=-1,BladeW,BladeH;
+        public List<Bitmap> Canonn= new List<Bitmap>();
+        public int CanonnX=-1, CanonnY=-1,CanonnW;
+        public Bitmap Canonn_Fire;
         public List<Bitmap> Teleport= new List<Bitmap>();
-        public List<Bitmap> Fist= new List<Bitmap>();
-        public List<Bitmap> Sword= new List<Bitmap>();
+        
         public List<Bitmap> Freeze= new List<Bitmap>();
         public List<Bitmap> Damage= new List<Bitmap>();
-        public Bitmap Fire;
 
         public List<Bitmap> Current= new List<Bitmap>();
         public List<Bitmap> Back= new List<Bitmap>();
-        public int IF_Health,Hit,Phase=1,IF,Counter_Hit,Counter_Damage;
+        public int IF_Health, Hit, Phase = 1, IF, Counter_Hit, Counter_Damage,IF_Counter,IF_C=5;
+        public int Time=0,Count_Down=0,CoolDown=0;
 
 
 
@@ -120,6 +126,7 @@ namespace Project_MultiMedia
         int StartX = 0, StartY = 0;
         float ScaleX, ScaleY;
         bool isDrag=false;
+        Random RR = new Random();
         Big_Boss Boss;
         CMap Map1;
         List<Enemy> Enemy2;
@@ -368,8 +375,11 @@ namespace Project_MultiMedia
                         Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height)
                     )
                     {
-                        Boss.Back = Boss.Current;
-                        Boss.Current = Boss.Damage;
+                        if (Boss.Action == "Idle")
+                        {
+                            Boss.Back = Boss.Current;
+                            Boss.Current = Boss.Damage;
+                        }
                         Hero.SBullet = false;
                         Hero.SBulletX = -1;
                         Hero.SBulletY = -1;
@@ -385,6 +395,7 @@ namespace Project_MultiMedia
                                     Boss.Status = "Phase2";
                                     Boss.IF_Health = 0;
                                     Boss.CurrentHealth = Boss.Health2;
+                                    Hero.IF = 0;
                                 }
                                 else
                                 {
@@ -453,7 +464,7 @@ namespace Project_MultiMedia
                 else
                 {
                     //Damage Enemy2
-                    for (int i2 = 0; i2 < Enemy2.Count; i2++)
+                    for (int i2 = 0; i2 < Enemy2.Count && i>=0; i2++)
                     {
                         Enemy pTrv = Enemy2[i2];
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height,
@@ -475,7 +486,7 @@ namespace Project_MultiMedia
                         }
                     }
                     //Damage Boss
-                    if (Boss.X != -1)
+                    if (Boss.X != -1 && i >= 0)
                     {
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height,
                          Boss.X, Boss.Y, Boss.W, Boss.H)
@@ -483,8 +494,11 @@ namespace Project_MultiMedia
                             Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height)
                         )
                         {
-                            Boss.Back = Boss.Current;
-                            Boss.Current = Boss.Damage;
+                            if (Boss.Action == "Idle")
+                            {
+                                Boss.Back = Boss.Current;
+                                Boss.Current = Boss.Damage;
+                            }
                             Hero.MBullet.RemoveAt(i);
                             Hero.MBulletX.RemoveAt(i);
                             Hero.MBulletY.RemoveAt(i);
@@ -501,9 +515,12 @@ namespace Project_MultiMedia
                                         Boss.Status = "Phase2";
                                         Boss.IF_Health = 0;
                                         Boss.CurrentHealth = Boss.Health2;
+                                        Boss.Current = Boss.Idle_Aura;
+                                        Boss.IF = 0;
                                     }
                                     else
                                     {
+                                        Boss.IF = 2;
                                         Boss.Status = "End";
                                     }
                                 }
@@ -745,11 +762,23 @@ namespace Project_MultiMedia
             {
                 Boss.Idle_Aura.Add(new Bitmap("assets/big_boss/1/" + i + ".png"));
             }
+            for (int i = 3; i <= 8; i++)
+            {
+                Boss.Move.Add(new Bitmap("assets/big_boss/1/" + i + ".png"));
+            }
+            for (int i = 0; i <= 2; i++)
+            {
+                Boss.Move_Aura.Add(new Bitmap("assets/big_boss/1/" + i + ".png"));
+            }
             for (int i = 0; i <= 6; i++)
             {
                 Boss.Damage.Add(new Bitmap("assets/big_boss/3/" + i + ".png"));
             }
-            Boss.Fire = new Bitmap("assets/big_boss/4/8.png");
+            for (int i = 0; i <= 3; i++)
+            {
+                Boss.Canonn.Add(new Bitmap("assets/big_boss/5/" + i + ".png"));
+            }
+            Boss.Canonn_Fire = new Bitmap("assets/big_boss/5/5.png");
             for (int i = 4; i >= 1; i--)
             {
                 Boss.Blade.Add(new Bitmap("assets/big_boss/8/" + i + ".png"));
@@ -763,6 +792,7 @@ namespace Project_MultiMedia
             {
                 Boss.Fist.Add(new Bitmap("assets/big_boss/2/" + i + ".png"));
             }
+            
             Boss.Action = "Idle";
             Boss.CurrentHealth = Boss.Health1;
             Boss.Current =Boss.Idle ;
@@ -772,15 +802,185 @@ namespace Project_MultiMedia
         }
         void MoveBoss()
         {
+            if (Boss.X != -1 && StartX <=Boss.X && StartX + ClientSize.Width >= Boss.X)
+            {
+                if (Boss.CoolDown != -1) Boss.CoolDown++;
+                
+                
+                if (Boss.Status == "Phase1" && Boss.Current == Boss.Idle && Boss.CoolDown > 40)
+                {
+                    int R = RR.Next(1, 2);
+                    if (R == 1) Boss.Action = "Fist";
+                    else Boss.Action = "Sword";
+                    Boss.Action = "Idle";
+                    Boss.Count_Down = 0;
+                    Boss.IF = 0;
+                    Boss.Time = 15;
+                    Boss.CoolDown = 0;
+                }
+                else if (Boss.Status == "Phase2" && Boss.Current == Boss.Idle_Aura && Boss.CoolDown > 40)
+                {
+                    int R = RR.Next(1, 3);
+                    if (R == 1) Boss.Action = "Blade";
+                    else if(R==2)Boss.Action = "Canonn";
+                    else Boss.Action = "Teleport";
+                    Boss.Current = Boss.Move_Aura;
+                    Boss.IF = 0;
+                    Boss.Count_Down = 0;
+                    Boss.Time = 15;
+                    Boss.CoolDown = -1;
+                    MessageBox.Show("Random Is" + R);
+                }
+                
+            
+            }
             if (Boss.X != -1)
             {
-                
+                Boss.IF_Counter++;
+                if (Boss.IF_Counter == Boss.IF_C)
+                {
+                    Boss.IF = (Boss.IF + 1) % Boss.Current.Count;
+                    Boss.IF_Counter = 0;
+                }
+                if (Boss.Current == Boss.Damage && Boss.IF + 1 == Boss.Damage.Count)
+                {
+                    if (Boss.Status == "Phase1") Boss.Current = Boss.Idle;
+                    else Boss.Current = Boss.Idle_Aura;
+                    Boss.Action = "Idle";
+                    Boss.IF = 0;
+                }
+                if (Boss.X > Hero.PosX && Boss.Dir == "right") Boss.Dir = "left";
+                if (Boss.X < Hero.PosX && Boss.Dir == "left") Boss.Dir = "right";
+                //Canonn
+                if (Boss.Action == "Canonn")
+                {
+                    if ((Hero.PosY > Boss.Y && Hero.PosY < Boss.Y + Boss.H) || Boss.Current == Boss.Canonn)
+                    {
+                        if (Boss.Current != Boss.Canonn) Boss.IF = 0;
+                        Boss.IF_C = 8;
+                        Boss.Current = Boss.Canonn;
+                        if (Boss.IF == 3 && Boss.CanonnX == -1)
+                        {
+                            if (Boss.Dir == "left")
+                            {
+                                Boss.CanonnW = -Boss.Canonn_Fire.Width;
+                                Boss.CanonnX = Boss.X - 10 - Boss.Canonn_Fire.Width + Boss.CanonnW;
+                            }
+                            else
+                            {
+                                Boss.CanonnW = Boss.Canonn_Fire.Width;
+                                Boss.CanonnX = Boss.X + Boss.W + 10;
+                            }
+                            Boss.CanonnY = Boss.Y + Boss.H - Boss.Canonn_Fire.Height;
+                        }
+                        else if (Boss.CanonnX != -1)
+                        {
+                            Boss.IF = 3;
+                            BossHit(Boss.CanonnX, Boss.CanonnY, Boss.Canonn_Fire.Width, Boss.Canonn_Fire.Height, 1);
+                        }
+                        if (Boss.CanonnX > Boss.X && Boss.CanonnX != -1) Boss.CanonnX += 15;
+                        else if (Boss.CanonnX != -1)
+                        {
+                            Boss.CanonnX -= 15;
+                            if (Boss.CanonnX <= 0) Boss.CanonnX = 0;
+                        }
+
+
+
+                        if ((Boss.X < Boss.CanonnX - 600 || Boss.X > Boss.CanonnX + 600 || Boss.CanonnX <= 0 || Boss.CanonnX > LimitX) && Boss.CanonnX != -1)
+                        {
+                            Boss.CanonnX = -1;
+                            Boss.CanonnY = -1;
+                            Boss.Action = "Idle";
+                            Boss.Current = Boss.Idle_Aura;
+                            Boss.IF_Counter = 0;
+                            Boss.IF_C = 5;
+                            Boss.IF = 0;
+                            Boss.CoolDown = 0;
+                        }
+                    }
+                    else
+                    {
+                        Boss.Current = Boss.Move;
+                        if (Boss.Y + Boss.H < Hero.H + Hero.PosY) Boss.Y += 2;
+                        else Boss.Y -= 2;
+                    }
+                }
+                //Blade
+                if (Boss.Action == "Blade")
+                {
+
+                    if (Boss.Current != Boss.Blade) Boss.IF = 0;
+                    Boss.IF_C = 8;
+                    Boss.Current = Boss.Blade;
+                    if (Boss.IF == 3 && Boss.BladeX == -1)
+                    {
+                        if (Boss.Dir == "left")
+                        {
+                            Boss.BladeW = -Boss.BladeEffect.Width / 2;
+                            Boss.BladeX = Boss.X - 10;
+                        }
+                        else
+                        {
+                            Boss.BladeW = Boss.BladeEffect.Width;
+                            Boss.BladeX = Boss.X + Boss.W + 10;
+                        }
+                        Boss.BladeH = (int)(Boss.BladeEffect.Height * 3);
+                        Boss.BladeY = Boss.Y + Boss.H - Boss.BladeH;
+                    }
+                    else if (Boss.BladeX != -1)
+                    {
+                        Boss.IF = 3;
+                        if (BossHit(Boss.BladeX, Boss.BladeY, Boss.BladeW, Boss.BladeH, 5))
+                        {
+                            Boss.BladeX = 0;
+                        }
+                    }
+                    if (Boss.BladeX > Boss.X && Boss.BladeX != -1) Boss.BladeX += 25;
+                    else if (Boss.BladeX != -1)
+                    {
+                        Boss.BladeX -= 25;
+                        if (Boss.BladeX <= 0) Boss.BladeX = 0;
+                    }
+                    if ((Boss.X < Boss.BladeX - 800 || Boss.X > Boss.BladeX + 800 || Boss.BladeX <= 0 || Boss.BladeX > LimitX) && Boss.BladeX != -1)
+                    {
+                        Boss.BladeX = -1;
+                        Boss.BladeY = -1;
+                        Boss.Action = "Idle";
+                        Boss.Current = Boss.Idle_Aura;
+                        Boss.IF_Counter = 0;
+                        Boss.IF_C = 5;
+                        Boss.IF = 0;
+                        Boss.CoolDown = 0;
+                    }
+
+                }
+                if ((Boss.Dir == "right" && Boss.W < 0) || (Boss.Dir == "left" && Boss.W > 0))
+                {
+                    Boss.X += Boss.W;
+                    Boss.W *= -1;
+                }
+
             }
-            else if(Hero.PosX>=2 && Hero.PosX<=4350&&Boss.X == -1)
+
+            else if (Hero.PosX >= 2 && Hero.PosX <= 4350 && Boss.X == -1)
             {
                 //Boss.X = 5278 + Boss.W;
                 Boss.X = 1000 + Boss.W;
             }
+        }
+        bool BossHit(int X,int Y,int W,int H,int Damage)
+        {
+            if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                     X, Y, W, H)
+                    || isHit(X, Y, W, H,
+                        Hero.PosX, Hero.Y, Hero.W, Hero.H)
+                    )
+            {
+                HeroDamage(Damage);
+                return true;
+            }
+            return false;
         }
         void LaserMove()
         {
@@ -1200,11 +1400,15 @@ namespace Project_MultiMedia
             if (Boss.X != -1)
             {
                 //Draw Heatlh Bar Of Boss
-                g.DrawImage(Boss.CurrentHealth[Boss.IF_Health], (ClientSize.Width/2)-50, 2*ScaleY);
+                g.DrawImage(Boss.CurrentHealth[Boss.IF_Health], (ClientSize.Width / 2) - 50, 2 * ScaleY);
 
                 //Draw Boss
                 g.DrawImage(Boss.Current[Boss.IF], (Boss.X - StartX) * ScaleX, Boss.Y * ScaleY, Boss.W, Boss.H);
 
+                //Draw Canonn
+                if (Boss.CanonnX != -1) g.DrawImage(Boss.Canonn_Fire, (Boss.CanonnX - StartX) * ScaleX, Boss.CanonnY * ScaleY, Boss.CanonnW, Boss.Canonn_Fire.Height * ScaleY);
+                //Draw Blade
+                if (Boss.BladeX != -1) g.DrawImage(Boss.BladeEffect, (Boss.BladeX - StartX) * ScaleX, Boss.BladeY * ScaleY, Boss.BladeW, Boss.BladeH * ScaleY);
             }
         }
         void DrawMap(Graphics g)
