@@ -124,7 +124,7 @@ namespace Project_MultiMedia
     }
     public partial class Form1 : Form
     {
-        int Fl,Alpha=0;
+        int Fl,Alpha;
         int LimitX, LimitY1, LimitY2;
         int BaseY=0;
         int StartX = 0, StartY = 0;
@@ -562,8 +562,6 @@ namespace Project_MultiMedia
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left&&Hero.HP&&Hero.Jum==0) isDrag = true;
-            if (e.Button == MouseButtons.Right&&Hero.HP&&Hero.Jum==0) MessageBox.Show("The Cool Down IS ="+ Boss.CoolDown);
-
         }
         bool CheckObsticals(int X,int Y)
         {
@@ -1153,7 +1151,7 @@ namespace Project_MultiMedia
                 }
 
             }
-            else if (Hero.PosX >= 4431 && Hero.PosX <= 4350 && Boss.X == -1)
+            else if (Hero.PosX >= 4431 && Hero.PosX <= 4550 && Boss.X == -1)
             {
                 Boss.X = 5278 + Boss.W;
             }
@@ -1353,6 +1351,7 @@ namespace Project_MultiMedia
             StartX = 0; StartY = BaseY;
             ScaleX = (float)ClientSize.Width / (float)1403f;
             ScaleY = (float)ClientSize.Height / (float)(Map1.img.Height-BaseY);
+            Alpha = 0;
             off = new Bitmap(ClientSize.Width, ClientSize.Height);
             Hero = new CHero();
             Boss = new Big_Boss();
@@ -1565,22 +1564,15 @@ namespace Project_MultiMedia
                     Brush A = new SolidBrush(Color.FromArgb(255, 0, 0, 0));
                     g.FillRectangle(A, 0, 0, ClientSize.Width, ClientSize.Height);
                     g.DrawString("OVERLORD PURGED", new Font("Impact", 50, FontStyle.Bold), Brushes.Gold, 100, 100);
-
-                    // 3. Draw the Story line directly underneath it
                     g.DrawString("The anomaly has stabilized. The world is safe... for now.", new Font("Arial", 16, FontStyle.Regular), Brushes.White, 100, 210);
-
-                    // 4. Draw the Project Members section (Your Names!)
                     g.DrawString("PROJECT MEMBERS:", new Font("Arial", 14, FontStyle.Bold), Brushes.DeepSkyBlue, 100, 300);
                     g.DrawString("- Omar", new Font("Arial", 14, FontStyle.Regular), Brushes.White, 120, 335);
                     g.DrawString("- Zahretalola", new Font("Arial", 14, FontStyle.Regular), Brushes.White, 120, 370);
-
-                    // 5. Draw the Restart prompt near the bottom
                     g.DrawString("Press [R] to Restart", new Font("Courier New", 14, FontStyle.Bold), Brushes.LightGray, 100, 480);
                 }
             }
             else if(!Hero.HP)
             {
-                
                 g.DrawString("YOU DEAD", new Font("Arial", 36, FontStyle.Bold), Brushes.Red, ClientSize.Width / 2 - 40, ClientSize.Height / 2 - 30);
                 g.DrawString("Press [R] to Restart", new Font("Arial", 36, FontStyle.Bold), Brushes.Red, ClientSize.Width / 2 - 80, ClientSize.Height / 2 + 40);
             }
