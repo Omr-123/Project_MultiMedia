@@ -211,10 +211,7 @@ namespace Project_MultiMedia
                     (
                         isHit(Hero.PosX, Hero.PosY, Hero.W-40, Hero.H,
                             Map1.Ladder.X, Map1.Ladder.Y, Map1.Ladder.W, Map1.Ladder.H)
-                        ||
-                        isHit(Map1.Ladder.X, Map1.Ladder.Y, Map1.Ladder.W, Map1.Ladder.H,
-                                Hero.PosX, Hero.PosY, Hero.W-40, Hero.H)
-                       )
+                             )
                        && (Hero.PosY - 5 > 26)
                     ))
                 {
@@ -295,9 +292,6 @@ namespace Project_MultiMedia
                 if (
                     isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                         pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
-                    ||
-                    isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
-                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                     )
                 {
                     Hero.Coins++;
@@ -312,10 +306,7 @@ namespace Project_MultiMedia
                 if (
                     isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                         pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
-                    ||
-                    isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
-                            Hero.PosX, Hero.PosY, Hero.W, Hero.H)
-                    )
+                         )
                 {
                     if (pTrv.Type == 5) HeroDamage(20);
                     Map1.Poition.RemoveAt(i);
@@ -357,8 +348,6 @@ namespace Project_MultiMedia
                     if (pTrv.W <= 0) A = -1;
                     if (isHit(Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height,
                      pTrv.X, pTrv.Y, pTrv.W*A, pTrv.H)
-                    || isHit(pTrv.X, pTrv.Y, pTrv.W*A, pTrv.H,
-                        Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height)
                     )
                     {
                         Hero.SBullet = false;
@@ -379,8 +368,6 @@ namespace Project_MultiMedia
                     if (Boss.W <= 0) A = -1;
                     if (isHit(Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height,
                      Boss.X, Boss.Y, Boss.W*A, Boss.H)
-                    || isHit(Boss.X, Boss.Y, Boss.W*A, Boss.H,
-                        Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height)
                     )
                     {
                         if (Boss.Action == "Idle")
@@ -488,8 +475,6 @@ namespace Project_MultiMedia
                         if (A <= 0) A *= -1;
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height,
                          pTrv.X, pTrv.Y, pTrv.W*A, pTrv.H)
-                        || isHit(pTrv.X, pTrv.Y, pTrv.W*A, pTrv.H,
-                            Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height)
                         )
                         {
                             Hero.MBullet.RemoveAt(i);
@@ -511,8 +496,6 @@ namespace Project_MultiMedia
                         if (Boss.W <= 0) A = -1;
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height,
                          Boss.X, Boss.Y, Boss.W*A, Boss.H)
-                        || isHit(Boss.X, Boss.Y, Boss.W*A, Boss.H,
-                            Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height)
                         )
                         {
                             if (Boss.Action == "Idle")
@@ -699,18 +682,10 @@ namespace Project_MultiMedia
                 {
                     if (pTrv.FireX[i] > pTrv.X) pTrv.FireX[i] += 10;
                     else pTrv.FireX[i] -= 10;
-
-                    if (pTrv.FireX[i] < pTrv.X - 500 || pTrv.FireX[i] > pTrv.X + 500 || pTrv.FireX[i] < 0 || pTrv.FireX[i] > LimitX)
-                    {
-                        pTrv.FireX.RemoveAt(i);
-                        pTrv.FireY.RemoveAt(i);
-                        i--;
-                    }
-                    else if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
+                    
+                    if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      pTrv.FireX[i], pTrv.FireY[i], pTrv.Bullet.Width, pTrv.Bullet.Height)
-                    || isHit(pTrv.FireX[i], pTrv.FireY[i], pTrv.Bullet.Width, pTrv.Bullet.Height,
-                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
-                    )
+                        )
                     {
                         HeroDamage(1);
                         pTrv.FireX.RemoveAt(i);
@@ -718,6 +693,12 @@ namespace Project_MultiMedia
                         i--;
                     }
 
+                    else if (pTrv.FireX[i] < pTrv.X - 500 || pTrv.FireX[i] > pTrv.X + 500 || pTrv.FireX[i] < 0 || pTrv.FireX[i] > LimitX)
+                    {
+                        pTrv.FireX.RemoveAt(i);
+                        pTrv.FireY.RemoveAt(i);
+                        i--;
+                    }
                 }
             }
 
@@ -1161,9 +1142,7 @@ namespace Project_MultiMedia
             if (H <= 0) H *= -1;
             if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      X, Y, W, H)
-                    || isHit(X, Y, W, H,
-                        Hero.PosX, Hero.Y, Hero.W, Hero.H)
-                    )
+               )
             {
                 HeroDamage(Damage);
                 return true;
@@ -1198,9 +1177,7 @@ namespace Project_MultiMedia
                     Obs pTrv = Map1.Laser[i];
                     if (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      pTrv.X, pTrv.Y, pTrv.W, pTrv.H)
-                    || isHit(pTrv.X, pTrv.Y, pTrv.W, pTrv.H,
-                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
-                    )
+                        )
                     {
                         HeroDamage(1);
                     }
@@ -1468,8 +1445,6 @@ namespace Project_MultiMedia
                 if (e.KeyCode == Keys.Y &&
                     (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
-                    || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
-                        Hero.PosX, Hero.PosY, Hero.W, Hero.H)
                     ))
                 {
                     Map1.Elevator.IF = 2;
@@ -1480,8 +1455,6 @@ namespace Project_MultiMedia
                 if (e.KeyCode == Keys.U &&
                     (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
                      Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H)
-                    || isHit(Map1.Elevator.X, Map1.Elevator.Y, Map1.Elevator.W, Map1.Elevator.H,
-                        Hero.PosX, Hero.PosY, Hero.W + Hero.H, Hero.H)
                     ))
                 {
                     Map1.Elevator.IF = 2;
@@ -1503,8 +1476,16 @@ namespace Project_MultiMedia
         }
         bool isHit(int X1, int Y1, int W1, int H1, int X2, int Y2, int W2, int H2)
         {
-            if (W1 < 0) W1 *= -1;
-            if (W2 < 0) W2 *= -1;
+            if (X1 > X1 + W1)
+            {
+                X1 += W1;
+                W1 *= -1;
+            }
+            if (W2 < 0)
+            {
+                X2 += W2;
+                W2 *= -1;
+            }
             if (
                 (
                    X1 >= X2
@@ -1532,6 +1513,34 @@ namespace Project_MultiMedia
                 && X1 + W1 <= X2 + W2
                 && Y1 + H1 >= Y2
                 && Y1 + H1 <= Y2 + H2
+                )
+                ||
+                (
+                   X2 >= X1
+                && X2 <= X1 + W1
+                && Y2 >= Y1
+                && Y2 <= Y1 + H1
+                )
+                ||
+                (
+                   X2+W2 >= X1
+                && X2+W2 <= X1 + W1
+                && Y2 >= Y1
+                && Y2 <= Y1 + H1
+                )
+                ||
+                (
+                   X2  >= X1
+                && X2 <= X1 + W1
+                && Y2 +H2>= Y1
+                && Y2 +H2<= Y1 + H1
+                )
+                ||
+                (
+                   X2 + W2 >= X1
+                && X2 + W2 <= X1 + W1
+                && Y2 + H2>= Y1
+                && Y2 + H2<= Y1 + H1
                 )
                 )
             {
@@ -1590,13 +1599,14 @@ namespace Project_MultiMedia
             Hero.IF_Coins = (Hero.IF_Coins + 1) % Hero.Coin.Count;
             g.DrawString("" + Hero.Coins, new Font("Arial",40), Brushes.White, ClientSize.Width - 50, 10);
             g.DrawImage(Hero.Coin[Hero.IF_Coins], (ClientSize.Width - 100), 15);
-            if (Hero.SBulletX != -1) g.DrawImage(Hero.SBullett, Hero.SBulletX - StartX, Hero.SBulletY * ScaleY, 60, 60);
+            if (Hero.SBulletX != -1) g.DrawImage(Hero.SBullett, (Hero.SBulletX - StartX)*ScaleX, Hero.SBulletY * ScaleY, 60, 60);
+
             if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
             for (int i = 0; i < Hero.MBulletX.Count; i++)
             {
                 int Neg = 1;
                 if (Hero.MBulletX[i] < Hero.PosX) Neg = -1;
-                g.DrawImage(Hero.MBullett, Hero.MBulletX[i] - StartX, Hero.MBulletY[i] * ScaleY, 60* Neg, 60);
+                g.DrawImage(Hero.MBullett, (Hero.MBulletX[i] - StartX) * ScaleX, Hero.MBulletY[i] * ScaleY, 60* Neg, 60);
             }
         }
         void DrawBoss(Graphics g)
@@ -1654,7 +1664,7 @@ namespace Project_MultiMedia
                 {
                     int A = 1;
                     if (pTrv.FireX[i2] < pTrv.X) A = -1;
-                    g.DrawImage(pTrv.Bullet, pTrv.FireX[i2]-StartX, pTrv.FireY[i2]*ScaleY, pTrv.Bullet.Width*A, pTrv.Bullet.Height*ScaleY);
+                    g.DrawImage(pTrv.Bullet, (pTrv.FireX[i2]-StartX) * ScaleX, pTrv.FireY[i2]*ScaleY, pTrv.Bullet.Width*A, pTrv.Bullet.Height*ScaleY);
                 }
             }
 
