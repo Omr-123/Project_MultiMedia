@@ -14,7 +14,7 @@ namespace Project_MultiMedia
     {
         public int X, Y, W, H;
         public List<Bitmap> imgs = new List<Bitmap>();
-        public int IF,Counter;
+        public int IF,Counter,Timer=40,Timer_Counter=-1;
         public int spd;
         public int Type;
     }
@@ -28,9 +28,10 @@ namespace Project_MultiMedia
         public List<Obs> Coins = new List<Obs>();
         public List<Obs> Poition = new List<Obs>();
         public List<Obs> Laser= new List<Obs>();
+        public Obs Hole;
         
         public Obs Elevator = new Obs();
-        public Obs Ladder = new Obs();
+        public List<Obs>Ladder = new List<Obs>();
     }
     public class CHero
     {
@@ -39,6 +40,7 @@ namespace Project_MultiMedia
         public bool Rig, Lef, U, Dow, Spt;
         public List<Bitmap> Idle = new List<Bitmap>();
         public List<Bitmap> Move = new List<Bitmap>();
+        public List<Bitmap> Ladder = new List<Bitmap>();
         public List<Bitmap> Run = new List<Bitmap>();
         public List<Bitmap> Jump = new List<Bitmap>();
         public List<Bitmap> JumpDou = new List<Bitmap>();
@@ -50,7 +52,7 @@ namespace Project_MultiMedia
         public List<int> MBulletX=new List<int>(), MBulletY=new List<int>();
         public List<Bitmap> Current;
         
-        public bool Elevator,HP,SBullet;
+        public bool Elevator,HP,SBullet,Hole=false;
         public List<bool> MBullet=new List<bool>();
         public List<Bitmap>[] Heart = new List<Bitmap>[6];
         public int[] IF_Heart = new int[6];
@@ -172,7 +174,8 @@ namespace Project_MultiMedia
         }
         void Hero_Move()
         {
-            if (Hero.Jum == 0)
+            if(Hero.Jum==0)Gravity();
+            if (Hero.Jum == 0 && Hero.Hole==false)
             {
                 if (Hero.Spt&& Hero.IF_Sprint != Hero.Sprint.Count - 1)
                 {
@@ -190,7 +193,9 @@ namespace Project_MultiMedia
                     Hero.Sprt = 0;
                     Hero.Current = Hero.Move;
                 }
-                if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt > 0)
+                int Temp = 0;
+                if (Hero.W < 0) Temp = -Hero.W;
+                if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt - Temp> 0)
                 {
                     Hero.PosX -= Hero.spd + Hero.Sprt;
                     if (Hero.Dir != "left")
@@ -206,16 +211,37 @@ namespace Project_MultiMedia
                     }
                     if (Hero.Spt && Hero.IF_Sprint != Hero.Sprint.Count - 1) Hero.Current = Hero.Run;
                     else Hero.Current = Hero.Move;
-                } 
+                }
+                Temp = 80;
+
+                if (Hero.W < 0) Temp = -80;
                 if (Hero.U && ((Hero.PosY + Hero.H - 5 > LimitY1) ||
                     (
-                        isHit(Hero.PosX, Hero.PosY, Hero.W-40, Hero.H,
-                            Map1.Ladder.X, Map1.Ladder.Y, Map1.Ladder.W, Map1.Ladder.H)
-                             )
-                       && (Hero.PosY - 5 > 26)
-                    ))
+                        isHit(Hero.PosX+Temp/2, Hero.PosY, Hero.W-Temp, Hero.H,
+                            Map1.Ladder[0].X, Map1.Ladder[0].Y, Map1.Ladder[0].W, Map1.Ladder[0].H)       
+                       ||
+                       isHit(Hero.PosX + Temp / 2, Hero.PosY, Hero.W - Temp, Hero.H,
+                            Map1.Ladder[1].X, Map1.Ladder[1].Y, Map1.Ladder[1].W, Map1.Ladder[1].H)
+                             
+                    )))
                 {
-                    Hero.PosY -= 5;
+                    Hero.PosY -= (5+Hero.Sprt/2);
+                    if((
+                        isHit(Hero.PosX + Temp / 2, Hero.PosY+Hero.H, Hero.W - Temp, Hero.H+10,
+                            Map1.Ladder[0].X, Map1.Ladder[0].Y, Map1.Ladder[0].W, Map1.Ladder[0].H)
+                       ||
+                       isHit(Hero.PosX + Temp / 2, Hero.PosY+Hero.H, Hero.W - Temp, Hero.H+10,
+                            Map1.Ladder[1].X, Map1.Ladder[1].Y, Map1.Ladder[1].W, Map1.Ladder[1].H)
+
+                    ))
+                    {
+                        if (Hero.Dir != "Climb")
+                        {
+                            Hero.Dir = "Climb";
+                            Hero.Current = Hero.Ladder;
+                            Hero.IF = 0;
+                        }
+                    }
                 }
                 if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX-Hero.W-20)
                 {
@@ -235,7 +261,26 @@ namespace Project_MultiMedia
                     if (Hero.Spt && Hero.IF_Sprint != Hero.Sprint.Count - 1) Hero.Current = Hero.Run;
                     else Hero.Current = Hero.Move;
                 }
-                if (Hero.Dow && Hero.PosY + Hero.H + 5 < LimitY2) Hero.PosY += 5;
+                if (Hero.Dow && Hero.PosY + Hero.H + 5 < LimitY2)
+                {
+                    Hero.PosY += (5 + Hero.Sprt/2);
+                    if ((
+                        isHit(Hero.PosX + Temp / 2, Hero.PosY + Hero.H, Hero.W - Temp, Hero.H + 10,
+                            Map1.Ladder[0].X, Map1.Ladder[0].Y, Map1.Ladder[0].W, Map1.Ladder[0].H)
+                       ||
+                       isHit(Hero.PosX + Temp / 2, Hero.PosY + Hero.H, Hero.W - Temp, Hero.H + 10,
+                            Map1.Ladder[1].X, Map1.Ladder[1].Y, Map1.Ladder[1].W, Map1.Ladder[1].H)
+
+                    ))
+                    {
+                        if (Hero.Dir != "Climb")
+                        {
+                            Hero.Dir = "Climb";
+                            Hero.Current = Hero.Ladder;
+                            Hero.IF = 0;
+                        }
+                    }
+                }
                 
                 if (Hero.Dir == "idle") Hero.Idle_Count++;
 
@@ -245,26 +290,27 @@ namespace Project_MultiMedia
                     Hero.Idle_Count = 0;
                 }
             }
-            else
+            else if(Hero.Hole==false)
             {
                 if (Hero.IF + Hero.J1 == Hero.Current.Count)
                 {
                     Hero.J1 = -1;
-                    Hero.J2 = 6;
+                    Hero.J2 = 7;
                 }
                 Hero.Jumper_Counter++;
-                if (Hero.Jumper_Counter == 3)
+                if (Hero.Jumper_Counter == 4)
                 {
                     Hero.IF += Hero.J1;
+                    if (Hero.IF == 0) Hero.IF = -1;
                     Hero.Jumper_Counter = 0;
                 }
-                if (Hero.IF == 0)
+                if (Hero.IF == -1)
                 {
                     Hero.Current = Hero.Idle;
                     Hero.Dir = "idle";
                     Hero.Jum = 0;
                     Hero.J1 = 1;
-                    Hero.J2 = -6;
+                    Hero.J2 = -7;
                     Hero.IF = 0;
                 }
                 else
@@ -542,12 +588,59 @@ namespace Project_MultiMedia
                 }
             }
         }
+        void Gravity()
+        {
+            int Temp = 80;
+            if (Hero.W < 0) Temp = -80;
+            if (Hero.Jum == 0 && !Hero.Elevator && Hero.HP)
+            {
+                if (isHit(Hero.PosX + Temp / 2, Hero.PosY, Hero.W - Temp, Hero.H,
+                         Map1.Hole.X, Map1.Hole.Y, Map1.Hole.W, Map1.Hole.H))
+                {
+                    Hero.PosY += 8;
+                    Hero.Hole = true;
+                    if ((Hero.PosY) * ScaleY > (Map1.Hole.Y + Map1.Hole.H / 2) * ScaleY)
+                    {
+                        HeroDamage(40);
+                    }
+                }
+                else if (Hero.PosY + Hero.H < LimitY1-10 && Hero.Jum==0 && 
+                    !Hero.Elevator && !Floor() && 
+                    Hero.Dir!="Climb" ) Hero.PosY += 12;
+            }
+        }
+        bool Floor()
+        {
+            int Temp = 80;
+            if (Hero.W < 0) Temp = -80;
+            for (int i = 0; i < Map1.Obsticals.Count; i++)
+            {
+                Obs pv = Map1.Obsticals[i];
+                if(isHit(Hero.PosX + Temp / 2, Hero.PosY+Hero.H-30, Hero.W - Temp, 30,
+                    pv.X, pv.Y, pv.W, pv.H))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left&&Hero.HP&&Hero.Jum==0) isDrag = true;
         }
         bool CheckObsticals(int X,int Y)
         {
+            int Temp = 80;
+            if (Hero.W < 0) Temp = -80;
+            for (int i = 0; i < Map1.Obsticals.Count; i++)
+            {
+                Obs pv = Map1.Obsticals[i];
+                if (isHit(Hero.PosX + (Temp / 2)+X, Hero.PosY +Y, Hero.W - Temp, Hero.H,
+                    pv.X, pv.Y+10, pv.W, pv.H))
+                {
+                    return true;
+                }
+            }
             return false;
         }
         void Map1Move()
@@ -557,22 +650,44 @@ namespace Project_MultiMedia
             {
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
-                else Map1.Elevator.IF = 0;
+                else
+                {
+                    Map1.Elevator.Y = 1;
+                    Map1.Elevator.IF = 0;
+                }
                 Hero.Elevator = false;
             }
             else if (Map1.Elevator.Y + Map1.Elevator.H + Map1.Elevator.spd >= 599+BaseY)
             {
-                Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
-                else Map1.Elevator.IF = 0;
+                else
+                {
+                    Map1.Elevator.spd = 0;
+                    Map1.Elevator.IF = 0;
+                }
                 Hero.Elevator = false;
             }
             else if (Map1.Elevator.IF != 0)
             {
                 Map1.Elevator.Y += Map1.Elevator.spd;
-                Hero.PosY += Map1.Elevator.spd;
-                Hero.Y = Hero.PosY - StartY;
+                if (Hero.Elevator)
+                {
+                    Hero.PosY += Map1.Elevator.spd;
+                    Hero.Y = Hero.PosY - StartY;
+                }
                 Map1.Elevator.IF = 1;
+            }
+            else
+            {
+                Map1.Elevator.Timer_Counter++;
+                Map1.Elevator.IF = 0;
+                if(Map1.Elevator.Timer_Counter == Map1.Elevator.Timer)
+                {
+                    Map1.Elevator.IF = 2;
+                    if (Map1.Elevator.Y*ScaleY>ClientSize.Height/2) Map1.Elevator.spd = -3;
+                    else Map1.Elevator.spd = 3;
+                    Map1.Elevator.Timer_Counter = 0;
+                }
             }
 
 
@@ -718,13 +833,25 @@ namespace Project_MultiMedia
             Map1.Elevator.Y = 599 - Map1.Elevator.H+BaseY;
             Map1.Elevator.W = 157;
             Map1.Elevator.spd = -3;
-
+            Map1.Elevator.spd = -3;
             //Ladder
-            Map1.Ladder.X =2911;
-            Map1.Ladder.Y =37;
-            Map1.Ladder.W =2999-Map1.Ladder.X;
-            Map1.Ladder.H =583-Map1.Ladder.Y;
+            Map1.Ladder.Add(new Obs());
+            Map1.Ladder.Add(new Obs());
+            Map1.Ladder[0].X =2911;
+            Map1.Ladder[0].Y =37;
+            Map1.Ladder[0].W =2999-Map1.Ladder[0].X;
+            Map1.Ladder[0].H =583-Map1.Ladder[0].Y;
+            Map1.Ladder[1].X =2099;
+            Map1.Ladder[1].Y =280;
+            Map1.Ladder[1].W =2176-Map1.Ladder[1].X;
+            Map1.Ladder[1].H =554-Map1.Ladder[1].Y;
 
+            //Holes
+            Map1.Hole = new Obs();
+            Map1.Hole.X =3160;
+            Map1.Hole.Y =592;
+            Map1.Hole.W = 3300- Map1.Hole.X;
+            Map1.Hole.H = 735- Map1.Hole.Y;
             //Obsticals
             CreateObsticals();
             //Coins
@@ -732,17 +859,18 @@ namespace Project_MultiMedia
             //Poitions
             CreatePoitions();
             //Laser
-            for (int i = 1; i <= 6; i++)
+            for (int i = 1; i <= 3; i++)
             {
                 Obs Pnn = new Obs();
-                for (int i2 = 0; i2 < 6; i2++)
+                for (int i2 = 3; i2 >= 0; i2--)
                 {
                     Pnn.imgs.Add(new Bitmap("assets/assets/laser/" + i2 + ".png"));
+                    Pnn.imgs[3 - i2].MakeTransparent(Color.White);
                 }
                 Pnn.W = Pnn.imgs[0].Width;
-                Pnn.H = 678 - 403;
+                Pnn.H = Pnn.imgs[0].Height/6;
                 Pnn.X = 4001 + (i * Pnn.W/2);
-                Pnn.Y = 402;
+                Pnn.Y = 387;
 
                 Map1.Laser.Add(Pnn);
             }
@@ -1134,7 +1262,7 @@ namespace Project_MultiMedia
             }
             else if (Hero.PosX >= 4431 && Hero.PosX <= 4550 && Boss.X == -1)
             {
-                Boss.X = 5278 + Boss.W;
+                Boss.X = 5378 + Boss.W;
             }
         }
         bool BossHit(int X,int Y,int W,int H,int Damage)
@@ -1151,26 +1279,19 @@ namespace Project_MultiMedia
         }
         void LaserMove()
         {
-            if (Hero.Coins >= 2)
+            if (Hero.Coins >= 2 && Map1.Laser.Count!=0)
             {
-                for (int i = 0; i < Map1.Laser.Count; i++)
-                {
-                    Obs pTrv = Map1.Laser[i];
+                    Obs pTrv = Map1.Laser[0];
                     pTrv.Counter++;
-                    if (pTrv.IF + 1 == pTrv.imgs.Count)
-                    {
-                        Map1.Laser.RemoveAt(i);
-                        i--;
-                    }
+                    if (pTrv.IF + 1 == pTrv.imgs.Count) Map1.Laser.RemoveAt(0);
                     else if(pTrv.Counter==5)
                     {
                         pTrv.IF = (pTrv.IF + 1) % pTrv.imgs.Count;
+                        pTrv.H = pTrv.imgs[pTrv.IF].Height / 6;
                         pTrv.Counter = 0;
                     }
-
-                }
             }
-            else
+            if(Map1.Laser.Count!=0)
             {
                 for (int i = 0; i < Map1.Laser.Count; i++)
                 {
@@ -1202,6 +1323,30 @@ namespace Project_MultiMedia
             Pnn.Y = 282+BaseY;
             Pnn.W = 218;
             Pnn.H = 112;
+            Map1.Obsticals.Add(Pnn);
+            Pnn = new Obs();
+            Pnn.X = 3413;
+            Pnn.Y = 240+BaseY;
+            Pnn.W = 3642-Pnn.X;
+            Pnn.H = 277-Pnn.Y;
+            Map1.Obsticals.Add(Pnn); 
+            Pnn = new Obs();
+            Pnn.X = 3646;
+            Pnn.Y = 283+BaseY;
+            Pnn.W = 3870-Pnn.X;
+            Pnn.H = 319-Pnn.Y;
+            Map1.Obsticals.Add(Pnn);
+            Pnn = new Obs();
+            Pnn.X = 3140;
+            Pnn.Y = 290+BaseY;
+            Pnn.W = 3430-Pnn.X;
+            Pnn.H = 330-Pnn.Y;
+            Map1.Obsticals.Add(Pnn);
+            Pnn = new Obs();
+            Pnn.X = 3998;
+            Pnn.Y = 357+BaseY;
+            Pnn.W = 4210-Pnn.X;
+            Pnn.H = 400-Pnn.Y;
             Map1.Obsticals.Add(Pnn);
 
         }
@@ -1297,6 +1442,10 @@ namespace Project_MultiMedia
             for (int i = 133; i <= 136; i++)
             {
                 Hero.Bullet.Add(new Bitmap("assets/Hero1/Right/" + i + ".png"));
+            }  
+            for (int i = 0; i <= 7; i++)
+            {
+                Hero.Ladder.Add(new Bitmap("assets/Hero1/Right/Ladder/" + i + ".png"));
             }
             Hero.SBullett.MakeTransparent(Color.White);
             Hero.MBullett.MakeTransparent(Color.White);
@@ -1320,7 +1469,10 @@ namespace Project_MultiMedia
             Hero.Current = Hero.Idle;
             Hero.HP = true;
             Hero.spd = 15;
-            Hero.Coins = 0;
+            Hero.Coins = 0; 
+            Hero.Jum = 0;
+            Hero.J1 = 1;
+            Hero.J2 = -7;
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -1392,24 +1544,24 @@ namespace Project_MultiMedia
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             DrawBubb(CreateGraphics());
-
         }
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
             if (Hero.HP && Boss.Status!="End")
             {
 
-                if ((e.KeyCode == Keys.Left || e.KeyCode == Keys.A) && !Hero.Elevator&&Hero.Jum==0) Hero.Lef = true;
-                if ((e.KeyCode == Keys.Right || e.KeyCode == Keys.D) && !Hero.Elevator && Hero.Jum == 0) Hero.Rig = true;
-                if ((e.KeyCode == Keys.Down || e.KeyCode == Keys.S) && !Hero.Elevator && Hero.Jum == 0) Hero.Dow = true;
-                if ((e.KeyCode == Keys.Up || e.KeyCode == Keys.W) && !Hero.Elevator && Hero.Jum == 0) Hero.U = true;
-                if (e.KeyCode == Keys.Space && !Hero.Elevator&&Hero.Jum!=2)
+                if ((e.KeyCode == Keys.Left || e.KeyCode == Keys.A) && !Hero.Elevator) Hero.Lef = true;
+                if ((e.KeyCode == Keys.Right || e.KeyCode == Keys.D) && !Hero.Elevator ) Hero.Rig = true;
+                if ((e.KeyCode == Keys.Down || e.KeyCode == Keys.S) && !Hero.Elevator &&!Floor()&&Hero.PosY+Hero.H >LimitY1-20) Hero.Dow = true;
+                if ((e.KeyCode == Keys.Up || e.KeyCode == Keys.W) && !Hero.Elevator ) Hero.U = true;
+                if (e.KeyCode == Keys.Space && !Hero.Elevator&&Hero.Jum!=2 && Hero.Hole==false)
                 {
                     Hero.IF = 0;
+                    
                     if (Hero.Jum == 0)
                     {
-                        if (Hero.W < 0) Hero.J3 = -5;
-                        else Hero.J3 = 5;
+                        if (Hero.W < 0) Hero.J3 = -7;
+                        else Hero.J3 = 7;
                         Hero.Jum = 1;
                         Hero.Current = Hero.Jump;
                     }
@@ -1451,6 +1603,7 @@ namespace Project_MultiMedia
                     Map1.Elevator.spd = -3;
                     Hero.PosY = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
                     Hero.Elevator = true;
+                    Map1.Elevator.Timer_Counter = 0;
                 }
                 if (e.KeyCode == Keys.U &&
                     (isHit(Hero.PosX, Hero.PosY, Hero.W, Hero.H,
@@ -1462,6 +1615,7 @@ namespace Project_MultiMedia
                     if (Map1.Elevator.Y <= 0) Map1.Elevator.Y = 1;
                     Hero.PosY = Map1.Elevator.Y + Map1.Elevator.H - Hero.H;
                     Hero.Elevator = true;
+                    Map1.Elevator.Timer_Counter = 0;
                 }
 
             }
@@ -1600,7 +1754,6 @@ namespace Project_MultiMedia
             g.DrawString("" + Hero.Coins, new Font("Arial",40), Brushes.White, ClientSize.Width - 50, 10);
             g.DrawImage(Hero.Coin[Hero.IF_Coins], (ClientSize.Width - 100), 15);
             if (Hero.SBulletX != -1) g.DrawImage(Hero.SBullett, (Hero.SBulletX - StartX)*ScaleX, Hero.SBulletY * ScaleY, 60, 60);
-
             if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
             for (int i = 0; i < Hero.MBulletX.Count; i++)
             {
