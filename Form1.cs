@@ -70,16 +70,18 @@ namespace Project_MultiMedia
     public class Enemy
     {
         public int X,Y,W,H;
+        public List<Bitmap> Idle = new List<Bitmap>();
         public List<Bitmap> Move = new List<Bitmap>();
         public List<Bitmap> Current;
         public List<int> FireX = new List<int>(),FireY=new List<int>();
         public Bitmap Bullet = new Bitmap("assets/enemy3/Bullet.png");
         public List<Bitmap> Fly = new List<Bitmap>();
         public List<Bitmap> Ready = new List<Bitmap>();
+        public List<Bitmap> Fist= new List<Bitmap>();
         public int IF;
         public string Dir="right";
         public int spd = 10;
-        public int Counter;
+        public int Counter,IF_Counter;
         public int HP=100;
     }
     public class planes
@@ -120,22 +122,21 @@ namespace Project_MultiMedia
         public List<Bitmap> End = new List<Bitmap>();
         public int IF_Health, Hit, Phase = 1, IF, Counter_Hit, Counter_Damage,IF_Counter,IF_C=5;
         public int Time=0,Time_Count=0,Count_Down=0,CoolDown=0;
-
-
-
     }
     public partial class Form1 : Form
     {
-        int Fl,Alpha;
-        int LimitX, LimitY1, LimitY2;
+        int Level,Transition=255,Count_Transition;
+        int Fl,Alpha,Wid=800;
+        int LimitX1,LimitX2, LimitY1, LimitY2;
         int BaseY=0;
         int StartX = 0, StartY = 0;
         float ScaleX, ScaleY;
-        bool isDrag=false;
+        bool isDrag=false,ShowLevel=false;
         Random RR = new Random();
         Big_Boss Boss;
         CMap Map1;
         List<Enemy> Enemy2;
+        Enemy Enemy3;
         Bitmap off;
         planes Plane;
         CHero Hero;
@@ -167,9 +168,9 @@ namespace Project_MultiMedia
             Map1Move();
             LaserMove();
             MoveEnemy();
+            MoveEnemy3();
             MoveBoss();
             Hero_ability();
-            MoveBoss();
             DrawBubb(CreateGraphics());
         }
         void Hero_Move()
@@ -194,8 +195,8 @@ namespace Project_MultiMedia
                     Hero.Current = Hero.Move;
                 }
                 int Temp = 0;
-                if (Hero.W < 0) Temp = -Hero.W;
-                if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt - Temp> 0)
+                Temp = 80;
+                if (Hero.Lef && Hero.PosX - Hero.spd - Hero.Sprt-Temp> LimitX1)
                 {
                     Hero.PosX -= Hero.spd + Hero.Sprt;
                     if (Hero.Dir != "left")
@@ -212,7 +213,6 @@ namespace Project_MultiMedia
                     if (Hero.Spt && Hero.IF_Sprint != Hero.Sprint.Count - 1) Hero.Current = Hero.Run;
                     else Hero.Current = Hero.Move;
                 }
-                Temp = 80;
 
                 if (Hero.W < 0) Temp = -80;
                 if (Hero.U && ((Hero.PosY + Hero.H - 5 > LimitY1) ||
@@ -243,7 +243,7 @@ namespace Project_MultiMedia
                         }
                     }
                 }
-                if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX-Hero.W-20)
+                if (Hero.Rig && Hero.PosX + Hero.W + Hero.spd + Hero.Sprt < LimitX2-20)
                 {
                     Hero.PosX += Hero.spd + Hero.Sprt;
                     if (Hero.Dir != "right")
@@ -322,12 +322,39 @@ namespace Project_MultiMedia
             }
 
 
-            if (Hero.PosX >= ClientSize.Width / 2 && Hero.PosX < LimitX - (ClientSize.Width / 2) - 20)
+            if (Hero.PosX >= (Wid / 2)+LimitX1 && Hero.PosX < LimitX2 - (Wid /2) - 80)
             {
                 StartX = Hero.PosX - Hero.X;
-                if (StartX < 0) StartX = 0;
+                if (StartX < LimitX1) StartX = LimitX1;
             }
-            else if (Hero.PosX <= ClientSize.Width) StartX = 0;
+            if (Hero.PosX + Hero.W > LimitX2 - 40)
+            {
+                if (Level != 4)
+                {
+                    Level++;
+                    Transition = 0;
+                    if (Level == 2)
+                    {
+                        LimitX1 = 1402;
+                        LimitX2 = 2807;
+                    }
+                    if (Level == 3)
+                    {
+                        LimitX1 = 2807;
+                        LimitX2 = 4425;
+                    }
+                    if (Level == 4)
+                    {
+                        LimitX1 = 4230;
+                        LimitX2 = Map1.img.Width;
+                    }
+                    StartX = LimitX1;
+                    Hero.PosX = LimitX1 + 10;
+                    Transition = 255;
+                    ShowLevel = true;
+                }
+            }
+
             Hero.X = Hero.PosX - StartX;
             
             Hero.Y = Hero.PosY - StartY;
@@ -455,8 +482,23 @@ namespace Project_MultiMedia
                         }
                     }
                 }
-
-                if (Hero.SBulletX < Hero.PosX - 900 || Hero.SBulletX > Hero.PosX + 900 || Hero.SBulletX < 0 || Hero.SBulletX > LimitX)
+                //Damage ENemy3
+                if (Enemy3.HP > 0)
+                {
+                    int A = 1;
+                    Enemy pTrv = Enemy3;
+                    if (pTrv.W <= 0) A = -1;
+                    if (isHit(Hero.SBulletX, Hero.SBulletY, Hero.SBullett.Width, Hero.SBullett.Height,
+                     pTrv.X, pTrv.Y, pTrv.W * A, pTrv.H)
+                    )
+                    {
+                        Hero.SBullet = false;
+                        Hero.SBulletX = -1;
+                        Hero.SBulletY = -1;
+                        pTrv.HP -= 40;
+                    }
+                }
+                if (Hero.SBulletX < Hero.PosX - 900 || Hero.SBulletX > Hero.PosX + 900 || Hero.SBulletX < LimitX1 || Hero.SBulletX > LimitX2)
                 {
                     Hero.SBullet = false;
                     Hero.SBulletX = -1;
@@ -504,7 +546,7 @@ namespace Project_MultiMedia
                 }
                 if (Hero.MBulletX[i] > Hero.PosX) Hero.MBulletX[i] += 32;
                 else Hero.MBulletX[i] -= 32;
-                if (Hero.MBulletX[i] < Hero.PosX - 900 || Hero.MBulletX[i] > Hero.PosX + 900 || Hero.MBulletX[i] < 0 || Hero.MBulletX[i] > LimitX)
+                if (Hero.MBulletX[i] < Hero.PosX - 900 || Hero.MBulletX[i] > Hero.PosX + 900 || Hero.MBulletX[i] < LimitX1 || Hero.MBulletX[i] > LimitX2)
                 {
                     Hero.MBullet.RemoveAt(i);
                     Hero.MBulletX.RemoveAt(i);
@@ -514,13 +556,13 @@ namespace Project_MultiMedia
                 else
                 {
                     //Damage Enemy2
-                    for (int i2 = 0; i2 < Enemy2.Count && i>=0; i2++)
+                    for (int i2 = 0; i2 < Enemy2.Count && i >= 0; i2++)
                     {
                         Enemy pTrv = Enemy2[i2];
                         int A = 1;
                         if (A <= 0) A *= -1;
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height,
-                         pTrv.X, pTrv.Y, pTrv.W*A, pTrv.H)
+                         pTrv.X, pTrv.Y, pTrv.W * A, pTrv.H)
                         )
                         {
                             Hero.MBullet.RemoveAt(i);
@@ -536,12 +578,12 @@ namespace Project_MultiMedia
                         }
                     }
                     //Damage Boss
-                    if (Boss.X != -1 && i >= 0 && Boss.Status!="End")
+                    if (Boss.X != -1 && i >= 0 && Boss.Status != "End")
                     {
                         int A = 1;
                         if (Boss.W <= 0) A = -1;
                         if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.MBullett.Width, Hero.MBullett.Height,
-                         Boss.X, Boss.Y, Boss.W*A, Boss.H)
+                         Boss.X, Boss.Y, Boss.W * A, Boss.H)
                         )
                         {
                             if (Boss.Action == "Idle")
@@ -553,7 +595,7 @@ namespace Project_MultiMedia
                             Hero.MBulletX.RemoveAt(i);
                             Hero.MBulletY.RemoveAt(i);
                             i--;
-                            Boss.Hit ++;
+                            Boss.Hit++;
                             if (Boss.Hit >= 3)
                             {
                                 Boss.Hit = 0;
@@ -584,7 +626,23 @@ namespace Project_MultiMedia
                             }
                         }
                     }
-
+                    //Damage Enemy3
+                    if (Enemy3.HP > 0 && i>=0 )
+                    {
+                        Enemy pTrv = Enemy3;
+                        int A = 1;
+                        if (A <= 0) A *= -1;
+                        if (isHit(Hero.MBulletX[i], Hero.MBulletY[i], Hero.SBullett.Width, Hero.SBullett.Height,
+                         pTrv.X, pTrv.Y, pTrv.W * A, pTrv.H)
+                        )
+                        {
+                            Hero.MBullet.RemoveAt(i);
+                            Hero.MBulletX.RemoveAt(i);
+                            Hero.MBulletY.RemoveAt(i);
+                            i--;
+                            pTrv.HP -= 40;
+                        }
+                    }
                 }
             }
         }
@@ -641,12 +699,12 @@ namespace Project_MultiMedia
                     return true;
                 }
             }
-            return false;
+            return Hero.PosX+X+Temp <= LimitX1 || Hero.PosX+Hero.W+X >= LimitX2 ;
         }
         void Map1Move()
         {
             //Elevator
-            if (Map1.Elevator.Y <= 0+BaseY)
+            if (Map1.Elevator.Y <= 0+BaseY) //When Elevator
             {
                 Map1.Elevator.spd *= 0;
                 if (Map1.Elevator.IF != 2 && Map1.Elevator.IF != 0) Map1.Elevator.IF = 2;
@@ -699,13 +757,12 @@ namespace Project_MultiMedia
             }
 
             //Plane Move
-            if (Hero.PosX > 1388 && Plane.X == -1)
+            if (Hero.PosX > 1488 && Plane.X == -1)
             {
-                Plane.X = 2;
+                Plane.X = 800;
                 Plane.Y = 0;
-              
             }
-            else if (Plane.X + Plane.W > LimitX) Plane.X = -2;
+            else if (Plane.X> LimitX2) Plane.X = -2;
             else if(Plane.X>=0) Plane.X += 20;
         }
         void MoveEnemy()
@@ -739,7 +796,7 @@ namespace Project_MultiMedia
                 Enemy pTrv = Enemy2[i];
 
                 pTrv.Counter++;
-                if (pTrv.Counter == 7 || (pTrv.IF>=12 &&pTrv.IF<=14))
+                if (pTrv.Counter == 4 || (pTrv.IF>=12 &&pTrv.IF<=14))
                 {
                     pTrv.IF = (pTrv.IF + 1) % pTrv.Current.Count;
                     pTrv.Counter = 0;
@@ -808,7 +865,7 @@ namespace Project_MultiMedia
                         i--;
                     }
 
-                    else if (pTrv.FireX[i] < pTrv.X - 500 || pTrv.FireX[i] > pTrv.X + 500 || pTrv.FireX[i] < 0 || pTrv.FireX[i] > LimitX)
+                    else if (pTrv.FireX[i] < pTrv.X - 500 || pTrv.FireX[i] > pTrv.X + 500 || pTrv.FireX[i] < LimitX1 || pTrv.FireX[i] > LimitX2)
                     {
                         pTrv.FireX.RemoveAt(i);
                         pTrv.FireY.RemoveAt(i);
@@ -818,12 +875,120 @@ namespace Project_MultiMedia
             }
 
         }
+        void CreateEnemy3()
+        {
+                Enemy Pnn = Enemy3;
+                for (int i2 = 0; i2 <= 3; i2++)
+                {
+                    Pnn.Idle.Add(new Bitmap("assets/enemy1/" + i2 + ".png"));
+                }
+                for (int i2 = 8; i2 <= 11; i2++)
+                {
+                    Pnn.Move.Add(new Bitmap("assets/enemy1/" + i2 + ".png"));
+                }
+                for (int i2 = 16; i2 <= 19; i2++)
+                {
+                    Pnn.Fist.Add(new Bitmap("assets/enemy1/" + i2 + ".png"));
+                }
+                Pnn.Current = Pnn.Idle;
+                Pnn.W=Pnn.Idle[0].Width;
+                Pnn.H=Pnn.Idle[0].Height;
+                Pnn.X=1020;
+                Pnn.Y=611-Pnn.H;
+        }
+        void MoveEnemy3()
+        {
+            if (Enemy3.HP > 0)
+            {
+                Enemy3.IF_Counter++;
+                if (Enemy3.IF_Counter > 4)
+                {
+                    Enemy3.IF = (Enemy3.IF + 1) % Enemy3.Current.Count;
+                    Enemy3.IF_Counter = 0;
+                }
+            }
+            if(Hero.PosX>=728 && Hero.PosX <= 1370 && Enemy3.HP>0)
+            {
+                Enemy3.Counter++;
+                if (Enemy3.X > Hero.PosX && Enemy3.Dir == "right")
+                {
+                    Enemy3.Dir = "left";
+                    Enemy3.X += Enemy3.W;
+                    Enemy3.W *= -1 ;
+                }
+                else if (Enemy3.X < Hero.PosX && Enemy3.Dir == "left")
+                {
+                    Enemy3.Dir = "right";
+                    Enemy3.X += Enemy3.W;
+                    Enemy3.W *= -1;
+                }
+                int W = 0, W2 = 0, Flag = 0;
+                if (Hero.W <= 0)
+                {
+                    W = Hero.W;
+                    W2 = -Hero.W;
+                }
+                if (Hero.PosX + Hero.W + W2 < Enemy3.X + Enemy3.W && Enemy3.Dir == "left") Enemy3.X -= 5;
+                else if (Hero.PosX + W > Enemy3.X + Enemy3.W && Enemy3.Dir == "right") Enemy3.X += 5;
+                else if(isHit(Hero.PosX,Hero.PosY,Hero.W,Hero.H,Enemy3.X,Enemy3.Y,Enemy3.W,Enemy3.H))Flag++;
+                if (Hero.PosY + Hero.H > Enemy3.Y + Enemy3.H) Enemy3.Y++;
+                else if (Hero.PosY + Hero.H < Enemy3.Y + Enemy3.H) Enemy3.Y--;
+                else Flag++;
+
+                if (Flag != 2)
+                {
+                    if (Enemy3.Current != Enemy3.Move) Boss.IF = 0;
+                    Enemy3.Current = Enemy3.Move;
+                }
+                else if (Enemy3.Counter> 7)
+                {
+                    if (Enemy3.Current != Enemy3.Fist) Enemy3.IF = 0;
+                    Enemy3.Current = Enemy3.Fist;
+                    Enemy3.Counter= 0;
+                    HeroDamage(1);
+                }
+            }
+            else if(Enemy3.HP>0)
+            {
+                Enemy3.Current = Enemy3.Move;
+                if (Enemy3.X != 1020)
+                {
+                    if (Enemy3.X > 1020 && Enemy3.Dir != "Idle")
+                    {
+                        Enemy3.X -= 5;
+                        if (Enemy3.Dir != "left")
+                        {
+                            Enemy3.X += Enemy3.W;
+                            Enemy3.W *= -1;
+                            Enemy3.Dir = "left";
+                        }
+                    }
+                    else if(Enemy3.Dir!="Idle")
+                    {
+                        Enemy3.X += 5;
+                        if (Enemy3.Dir != "right")
+                        {
+                            Enemy3.X += Enemy3.W;
+                            Enemy3.W *= -1;
+                            Enemy3.Dir = "right";
+                        }
+                    }
+                    if (Enemy3.X > 1010 && Enemy3.X < 1030)
+                    {
+                        Enemy3.X = 1020;
+                        Enemy3.Dir = "Idle";
+                    }
+                }
+            }
+        }
         void CreateMap()
         {
             Map1 = new CMap();
             Hero = new CHero();
             Map1.img = new Bitmap("assets/Maps/1.png");
             Enemy2 = new List<Enemy>();
+            Enemy3 = new Enemy();
+            CreateEnemy3();
             //Elevator
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/1.png"));
             Map1.Elevator.imgs.Add(new Bitmap("assets/assets/Elevator/2.png"));
@@ -831,7 +996,7 @@ namespace Project_MultiMedia
             Map1.Elevator.X = 3453;
             Map1.Elevator.H = 220;
             Map1.Elevator.Y = 599 - Map1.Elevator.H+BaseY;
-            Map1.Elevator.W = 157;
+            Map1.Elevator.W = 3608-Map1.Elevator.X;
             Map1.Elevator.spd = -3;
             Map1.Elevator.spd = -3;
             //Ladder
@@ -844,7 +1009,7 @@ namespace Project_MultiMedia
             Map1.Ladder[1].X =2099;
             Map1.Ladder[1].Y =280;
             Map1.Ladder[1].W =2176-Map1.Ladder[1].X;
-            Map1.Ladder[1].H =554-Map1.Ladder[1].Y;
+            Map1.Ladder[1].H =560-Map1.Ladder[1].Y;
 
             //Holes
             Map1.Hole = new Obs();
@@ -1007,11 +1172,10 @@ namespace Project_MultiMedia
                     Boss.Time_Count++;
                     Boss.Count_Down++;
                     Boss.IF_C = 6;
-                    int A = 1, W = 0, W2 = 0, Flag = 0;
+                    int W = 0, W2 = 0, Flag = 0;
                     if (Hero.W <= 0)
                     {
                         W = Hero.W;
-                        A = -1;
                         W2 = -Hero.W;
                     }
                     if (Hero.PosX + Hero.W + W2 < Boss.X + Boss.W && Boss.Dir == "left") Boss.X -= 2;
@@ -1126,7 +1290,7 @@ namespace Project_MultiMedia
 
 
 
-                        if ((Boss.X < Boss.CanonnX - 600 || Boss.X > Boss.CanonnX + 600 || Boss.CanonnX <= 0 || Boss.CanonnX > LimitX) && Boss.CanonnX != -1)
+                        if ((Boss.X < Boss.CanonnX - 600 || Boss.X > Boss.CanonnX + 600 || Boss.CanonnX <= LimitX1 || Boss.CanonnX > LimitX2) && Boss.CanonnX != -1)
                         {
                             Boss.CanonnX = -1;
                             Boss.CanonnY = -1;
@@ -1181,7 +1345,7 @@ namespace Project_MultiMedia
                         Boss.BladeX -= 25;
                         if (Boss.BladeX <= 0) Boss.BladeX = 0;
                     }
-                    if ((Boss.X < Boss.BladeX - 800 || Boss.X > Boss.BladeX + 800 || Boss.BladeX <= 0 || Boss.BladeX > LimitX) && Boss.BladeX != -1)
+                    if ((Boss.X < Boss.BladeX - 800 || Boss.X > Boss.BladeX + 800 || Boss.BladeX <= LimitX1 || Boss.BladeX > LimitX2) && Boss.BladeX != -1)
                     {
                         Boss.BladeX = -1;
                         Boss.BladeY = -1;
@@ -1456,7 +1620,8 @@ namespace Project_MultiMedia
             Hero.Dow = false;
             Hero.SBulletX = -1;
             Hero.SBulletY = -1;
-            LimitX = Map1.img.Width;
+            LimitX1 =0;
+            LimitX2 =1401;
             LimitY1 = 574 + BaseY;
             LimitY2 = 700 + BaseY;
             Hero.PosX = 0;
@@ -1477,8 +1642,8 @@ namespace Project_MultiMedia
         private void Form1_Load(object sender, EventArgs e)
         {
             CreateMap();
-            StartX = 0; StartY = BaseY;
-            ScaleX = (float)ClientSize.Width / (float)1403f;
+            StartX = 0; StartY = BaseY; Level = 1;
+            ScaleX = (float)ClientSize.Width / (float)Wid;
             ScaleY = (float)ClientSize.Height / (float)(Map1.img.Height-BaseY);
             Alpha = 0;
             off = new Bitmap(ClientSize.Width, ClientSize.Height);
@@ -1589,7 +1754,7 @@ namespace Project_MultiMedia
                     }
                     else
                     {
-                        Hero.SBulletX = Hero.PosX -10;
+                        Hero.SBulletX = Hero.PosX -10+Hero.W;
                     }
                 }
 
@@ -1739,22 +1904,70 @@ namespace Project_MultiMedia
                 g.DrawString("YOU DEAD", new Font("Arial", 36, FontStyle.Bold), Brushes.Red, ClientSize.Width / 2 - 40, ClientSize.Height / 2 - 30);
                 g.DrawString("Press [R] to Restart", new Font("Arial", 36, FontStyle.Bold), Brushes.Red, ClientSize.Width / 2 - 80, ClientSize.Height / 2 + 40);
             }
+            else if (ShowLevel)
+            {
+                Brush A = new SolidBrush(Color.FromArgb(Transition, 0, 0, 0));
+                g.FillRectangle(A, 0, 0, ClientSize.Width, ClientSize.Height);
+                Transition-=25;
+                if (Transition <=50)
+                {
+                    if (Transition <= 0)
+                    {
+                        Transition = 0;
+                        Count_Transition++;
+                        if (Count_Transition == 50)
+                        {
+                            ShowLevel = false;
+                            Count_Transition = 0;
+                        }
+                    }
+                    if (Level == 1)
+                    {
+                        g.DrawString("LEVEL 1", new Font("Impact", 45, FontStyle.Bold), Brushes.Gold, 100, 150);
+                        g.DrawString("Welcome to the Ascent. Learn the ropes!", new Font("Arial", 16, FontStyle.Regular), Brushes.White, 100, 250);
+                        g.DrawString("Press Enter / Wait to Start...", new Font("Courier New", 12, FontStyle.Italic), Brushes.LightGray, 100, 450);
+                    }
+                    // LEVEL 2: The Rising Hazard
+                    else if (Level == 2)
+                    {
+                        g.DrawString("LEVEL 2", new Font("Impact", 45, FontStyle.Bold), Brushes.LightCoral, 100, 150);
+                        g.DrawString("The Core is Destabilizing! Climb faster!", new Font("Arial", 16, FontStyle.Regular), Brushes.White, 100, 250);
+                        g.DrawString("Watch out for rising laser hazards.", new Font("Arial", 14, FontStyle.Italic), Brushes.Orange, 100, 300);
+                    }
+
+                    // LEVEL 3: The Gauntlet
+                    else if (Level == 3)
+                    {
+                        g.DrawString("LEVEL 3", new Font("Impact", 45, FontStyle.Bold), Brushes.DeepSkyBlue, 100, 150);
+                        g.DrawString("The Overlord's Guards await. No turning back.", new Font("Arial", 16, FontStyle.Regular), Brushes.White, 100, 250);
+                        g.DrawString("Defeat the elite fiends to open the gate.", new Font("Arial", 14, FontStyle.Italic), Brushes.LightGray, 100, 300);
+                    }
+
+                    // LEVEL 4: The Final Big Boss
+                    else if (Level == 4)
+                    {
+                        g.DrawString("FINAL LEVEL", new Font("Impact", 50, FontStyle.Bold), Brushes.Red, 100, 140);
+                        g.DrawString("THE OVERLORD CHAMBER", new Font("Arial", 18, FontStyle.Bold), Brushes.DarkOrange, 100, 230);
+                        g.DrawString("Face the Peak Fiend. Survive his true form!", new Font("Arial", 16, FontStyle.Regular), Brushes.White, 100, 290);
+                    }
+                }
+            }
         }
         void DrawHero(Graphics g)
         {
             //Draw Hearts
             for (int i = 0; i < 6; i++)
             {
-                g.DrawImage(Hero.Heart[i][Hero.IF_Heart[i]], (60 * i)*ScaleX, 0, 60, 60);
+                g.DrawImage(Hero.Heart[i][Hero.IF_Heart[i]], (40 * i)*ScaleX, 0, 40 * ScaleX, 60);
             }
             //Draw Sprint
-            g.DrawImage(Hero.Sprint[Hero.IF_Sprint], 0, 70, Hero.Sprint[0].Width, Hero.Sprint[0].Height);
+            g.DrawImage(Hero.Sprint[Hero.IF_Sprint], 0, 70, Hero.Sprint[0].Width * ScaleX, Hero.Sprint[0].Height);
             //Draw Coins Number
             Hero.IF_Coins = (Hero.IF_Coins + 1) % Hero.Coin.Count;
             g.DrawString("" + Hero.Coins, new Font("Arial",40), Brushes.White, ClientSize.Width - 50, 10);
             g.DrawImage(Hero.Coin[Hero.IF_Coins], (ClientSize.Width - 100), 15);
             if (Hero.SBulletX != -1) g.DrawImage(Hero.SBullett, (Hero.SBulletX - StartX)*ScaleX, Hero.SBulletY * ScaleY, 60, 60);
-            if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W, Hero.H * ScaleY);
+            if (!Hero.Elevator) g.DrawImage(Hero.Current[Hero.IF], Hero.X*ScaleX, Hero.Y * ScaleY, Hero.W * ScaleX, Hero.H * ScaleY);
             for (int i = 0; i < Hero.MBulletX.Count; i++)
             {
                 int Neg = 1;
@@ -1767,60 +1980,60 @@ namespace Project_MultiMedia
             if (Boss.X != -1)
             {
                 //Draw Heatlh Bar Of Boss
-                g.DrawImage(Boss.CurrentHealth[Boss.IF_Health], (ClientSize.Width / 2) - Boss.CurrentHealth[0].Width/2, 2 * ScaleY);
+                g.DrawImage(Boss.CurrentHealth[Boss.IF_Health], ((Wid / 2) - Boss.CurrentHealth[0].Width/4) * ScaleX, 2 * ScaleY);
 
                 //Draw Boss
-                g.DrawImage(Boss.Current[Boss.IF], (Boss.X - StartX) * ScaleX, Boss.Y * ScaleY, Boss.W, Boss.H*ScaleY);
+                g.DrawImage(Boss.Current[Boss.IF], (Boss.X - StartX) * ScaleX, Boss.Y * ScaleY, Boss.W * ScaleX, Boss.H*ScaleY);
 
                 //Draw Canonn
-                if (Boss.CanonnX != -1) g.DrawImage(Boss.Canonn_Fire, (Boss.CanonnX - StartX) * ScaleX, Boss.CanonnY * ScaleY, Boss.CanonnW, Boss.Canonn_Fire.Height * ScaleY);
+                if (Boss.CanonnX != -1) g.DrawImage(Boss.Canonn_Fire, (Boss.CanonnX - StartX) * ScaleX, Boss.CanonnY * ScaleY, Boss.CanonnW * ScaleX, Boss.Canonn_Fire.Height * ScaleY);
                 //Draw Blade
-                if (Boss.BladeX != -1) g.DrawImage(Boss.BladeEffect, (Boss.BladeX - StartX) * ScaleX, Boss.BladeY * ScaleY, Boss.BladeW, Boss.BladeH * ScaleY);
+                if (Boss.BladeX != -1) g.DrawImage(Boss.BladeEffect, (Boss.BladeX - StartX) * ScaleX, Boss.BladeY * ScaleY, Boss.BladeW * ScaleX, Boss.BladeH * ScaleY);
                 //Draw Teleport Effect
-                if (Boss.TeleX!= -1) g.DrawImage(Boss.Teleport_Effect, (Boss.TeleX- StartX) * ScaleX, Boss.TeleY* ScaleY, Boss.TeleW, Boss.TeleH* ScaleY);
+                if (Boss.TeleX!= -1) g.DrawImage(Boss.Teleport_Effect, (Boss.TeleX- StartX) * ScaleX, Boss.TeleY* ScaleY, Boss.TeleW * ScaleX, Boss.TeleH* ScaleY);
             }
         }
         void DrawMap(Graphics g)
         {
             Map1.Dst = new Rectangle(0, 0, ClientSize.Width, ClientSize.Height);
-            Map1.Src = new Rectangle(StartX, StartY, 1403, Map1.img.Height-BaseY);
+            Map1.Src = new Rectangle(StartX, StartY, Wid, Map1.img.Height-BaseY);
             g.DrawImage(Map1.img, Map1.Dst, Map1.Src, GraphicsUnit.Pixel);
             //Elevator
-            g.DrawImage(Map1.Elevator.imgs[Map1.Elevator.IF], (Map1.Elevator.X - StartX)*ScaleX, (Map1.Elevator.Y - StartY) * ScaleY, Map1.Elevator.W, Map1.Elevator.H * ScaleY);
+            g.DrawImage(Map1.Elevator.imgs[Map1.Elevator.IF], (Map1.Elevator.X - StartX)*ScaleX, (Map1.Elevator.Y - StartY) * ScaleY, Map1.Elevator.W*ScaleX, Map1.Elevator.H * ScaleY);
             //Draw Coins
             for (int i = 0; i < Map1.Coins.Count; i++)
             {
                 Obs pTrv = Map1.Coins[i];
-                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y-StartY)*ScaleY, pTrv.W, pTrv.H*ScaleY);
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y-StartY)*ScaleY, pTrv.W * ScaleX, pTrv.H*ScaleY);
             }
             //Draw Poitions
             for (int i = 0; i < Map1.Poition.Count; i++)
             {
                 Obs pTrv = Map1.Poition[i];
-                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y - StartY) * ScaleY, pTrv.W, pTrv.H*ScaleY);
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X-StartX)*ScaleX, (pTrv.Y - StartY) * ScaleY, pTrv.W * ScaleX, pTrv.H*ScaleY);
             }
             //Draw Laser
             for (int i = 0; i < Map1.Laser.Count; i++)
             {
                 Obs pTrv = Map1.Laser[i];
-                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X - StartX)*ScaleX, pTrv.Y * ScaleY, pTrv.W, pTrv.H * ScaleY);
+                g.DrawImage(pTrv.imgs[pTrv.IF], (pTrv.X - StartX)*ScaleX, pTrv.Y * ScaleY, pTrv.W * ScaleX, pTrv.H * ScaleY);
             }
             //Draw Plane
-            if (Plane.X >= 0) g.DrawImage(Plane.img, (Plane.X - StartX) * ScaleX, Plane.Y, Plane.W, Plane.H*ScaleY);
+            if (Plane.X >= 0) g.DrawImage(Plane.img, (Plane.X - StartX) * ScaleX, Plane.Y, Plane.W * ScaleX, Plane.H*ScaleY);
 
             //Draw Enemy3
             for (int i = 0; i < Enemy2.Count; i++)
             {
                 Enemy pTrv = Enemy2[i];
-                g.DrawImage(pTrv.Current[pTrv.IF], (pTrv.X - StartX), pTrv.Y * ScaleY, pTrv.W, pTrv.H * ScaleY);
+                g.DrawImage(pTrv.Current[pTrv.IF], (pTrv.X - StartX) * ScaleX, pTrv.Y * ScaleY, pTrv.W * ScaleX, pTrv.H * ScaleY);
                 for (int i2 = 0; i2 < pTrv.FireX.Count; i2++)
                 {
                     int A = 1;
                     if (pTrv.FireX[i2] < pTrv.X) A = -1;
-                    g.DrawImage(pTrv.Bullet, (pTrv.FireX[i2]-StartX) * ScaleX, pTrv.FireY[i2]*ScaleY, pTrv.Bullet.Width*A, pTrv.Bullet.Height*ScaleY);
+                    g.DrawImage(pTrv.Bullet, (pTrv.FireX[i2]-StartX) * ScaleX, pTrv.FireY[i2]*ScaleY, pTrv.Bullet.Width*A * ScaleX, pTrv.Bullet.Height*ScaleY);
                 }
             }
-
+            if (Enemy3.HP > 0) g.DrawImage(Enemy3.Current[Enemy3.IF], (Enemy3.X - StartX) * ScaleX, Enemy3.Y * ScaleY, Enemy3.W * ScaleX, Enemy3.H * ScaleY);
 
 
         }
